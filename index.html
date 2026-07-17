@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="ساخت و اسکن QR کد آنلاین — لینک، متن، ایمیل، تماس، پیامک، وای‌فای و کارت ویزیت با شخصی‌سازی رنگ، اندازه، لوگو و قاب" />
+  <meta name="description" content="ساخت و اسکن QR کد آنلاین — لینک، متن، ایمیل، تماس، پیامک، وای‌فای، صدا، ویدیو و کارت ویزیت با شخصی‌سازی رنگ، اندازه، لوگو و قاب" />
   <title>ابزار QR کد | ساخت و اسکن آنلاین</title>
 
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔳</text></svg>" />
@@ -33,7 +33,7 @@
     <header class="qr-page-header">
       <span class="qr-page-subtitle">ابزار آنلاین رایگان</span>
       <h1 class="qr-page-title">ساخت و اسکن <span class="highlight">QR کد</span></h1>
-      <p class="qr-page-desc">لینک، متن، ایمیل، تماس، پیامک، وای‌فای و کارت ویزیت — با شخصی‌سازی کامل رنگ، اندازه، لوگو و قاب</p>
+      <p class="qr-page-desc">لینک، متن، ایمیل، تماس، پیامک، وای‌فای، صدا، ویدیو و کارت ویزیت — با شخصی‌سازی کامل رنگ، اندازه، لوگو و قاب</p>
     </header>
 
     <!-- تب‌های اصلی -->
@@ -59,6 +59,8 @@
               <button type="button" class="qr-chip" data-type="tel"><i class="fas fa-phone"></i> تماس</button>
               <button type="button" class="qr-chip" data-type="sms"><i class="fas fa-comment-sms"></i> پیامک</button>
               <button type="button" class="qr-chip" data-type="wifi"><i class="fas fa-wifi"></i> وای‌فای</button>
+              <button type="button" class="qr-chip" data-type="audio"><i class="fas fa-music"></i> صدا</button>
+              <button type="button" class="qr-chip" data-type="video"><i class="fas fa-video"></i> ویدیو</button>
               <button type="button" class="qr-chip" data-type="vcard"><i class="fas fa-address-card"></i> کارت ویزیت</button>
             </div>
 
@@ -124,6 +126,22 @@
                 </label>
                 <label class="qr-check"><input type="checkbox" id="wifi-hidden" /> شبکهٔ مخفی</label>
               </div>
+            </div>
+
+            <!-- فرم صدا -->
+            <div class="qr-fields" data-fields="audio">
+              <label class="qr-field"><span>لینک فایل صوتی</span>
+                <input type="url" id="audio-url" dir="ltr" placeholder="https://example.com/sound.mp3" />
+              </label>
+              <p class="qr-hint qr-hint-right">لینک مستقیم فایل صوتی (mp3، wav، ogg و…) — با اسکن کد، صدا همان‌جا پخش می‌شود.</p>
+            </div>
+
+            <!-- فرم ویدیو -->
+            <div class="qr-fields" data-fields="video">
+              <label class="qr-field"><span>لینک ویدیو</span>
+                <input type="url" id="video-url" dir="ltr" placeholder="https://example.com/video.mp4" />
+              </label>
+              <p class="qr-hint qr-hint-right">لینک مستقیم فایل ویدیویی (mp4، webm و…) یا لینک یوتیوب/آپارات — با اسکن کد، ویدیو همان‌جا پخش می‌شود.</p>
             </div>
 
             <!-- فرم کارت ویزیت -->
@@ -302,6 +320,7 @@
         <div class="qr-card" id="qr-result-card" hidden>
           <h3 class="qr-card-title"><i class="fas fa-circle-check"></i> نتیجه اسکن</h3>
           <div class="qr-result-type"><span id="result-type-badge" class="qr-badge"></span></div>
+          <div id="result-media" class="qr-media" hidden></div>
           <div id="result-rows" class="qr-result-rows"></div>
           <div class="qr-download-row" id="result-actions"></div>
           <details class="qr-acc qr-raw">

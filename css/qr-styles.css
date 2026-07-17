@@ -511,6 +511,31 @@ body {
 
 .qr-result-row .v a { color: var(--brand, #1a5f8a); }
 
+/* ---------- پلیر صوتی/ویدیویی نتیجهٔ اسکن ---------- */
+.qr-media { margin-bottom: 16px; }
+
+.qr-media audio {
+  display: block;
+  width: 100%;
+}
+
+.qr-media video,
+.qr-media iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: 12px;
+  background: #000;
+}
+
+/* راهنمای راست‌چین زیر فرم‌ها */
+.qr-hint-right {
+  text-align: right;
+  margin-top: -6px;
+  margin-bottom: 12px;
+}
+
 .qr-raw pre {
   direction: ltr;
   text-align: left;

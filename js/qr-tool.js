@@ -49,7 +49,11 @@
         tab.classList.add('active');
         $$('.qr-panel').forEach(function (p) { p.classList.remove('active'); });
         $('#' + tab.dataset.panel).classList.add('active');
-        if (tab.dataset.panel !== 'qr-scan-panel') stopCamera();
+        if (tab.dataset.panel !== 'qr-scan-panel') {
+          stopCamera();
+          // توقف پخش صدا/ویدیوی نتیجهٔ اسکن هنگام ترک پنل
+          $$('#result-media audio, #result-media video').forEach(function (m) { m.pause(); });
+        }
       });
     });
   }
@@ -114,6 +118,14 @@
 
       case 'text': {
         return val('text-content') || 'سلام دنیا!';
+      }
+
+      case 'audio': {
+        return normalizeUrl(val('audio-url')) || 'https://example.com/sound.mp3';
+      }
+
+      case 'video': {
+        return normalizeUrl(val('video-url')) || 'https://example.com/video.mp4';
       }
 
       case 'email': {
@@ -548,6 +560,19 @@
 
     if (/^https?:\/\//i.test(t) || /^www\./i.test(t)) {
       var href = /^www\./i.test(t) ? 'https://' + t : t;
+
+      // اگر لینک صوتی/ویدیویی باشد، پلیر داخلی نمایش داده می‌شود
+      var media = mediaFromUrl(href);
+      if (media) {
+        return {
+          type: media.kind === 'audio' ? 'audio' : 'video',
+          label: media.kind === 'audio' ? 'صدا' : 'ویدیو',
+          media: media,
+          rows: [{ k: 'آدرس', v: t, href: href }],
+          actions: [{ text: 'باز کردن لینک', icon: 'fa-up-right-from-square', href: href }, copyAction(t)]
+        };
+      }
+
       return { type: 'link', label: 'لینک', rows: [{ k: 'آدرس', v: t, href: href }],
         actions: [{ text: 'باز کردن لینک', icon: 'fa-up-right-from-square', href: href }, copyAction(t)] };
     }
@@ -610,6 +635,46 @@
 
   function copyAction(value, text) {
     return { text: text || 'کپی', icon: 'fa-copy', copy: value };
+  }
+
+  // تشخیص لینک‌های صوتی/ویدیویی برای پخش داخلی
+  // - فایل مستقیم: بر اساس پسوند مسیر
+  // - ویدیو: لینک‌های یوتیوب و آپارات هم به‌صورت embed پشتیبانی می‌شوند
+  function mediaFromUrl(href) {
+    var u;
+    try { u = new URL(href); } catch (e) { return null; }
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+
+    var path = u.pathname.toLowerCase();
+    if (/\.(mp3|wav|ogg|oga|m4a|aac|flac|opus)$/.test(path)) {
+      return { kind: 'audio', src: href };
+    }
+    if (/\.(mp4|webm|ogv|m4v|mov)$/.test(path)) {
+      return { kind: 'video', src: href };
+    }
+
+    var host = u.hostname.replace(/^www\.|^m\./, '');
+    if (host === 'youtube.com' || host === 'youtube-nocookie.com' || host === 'youtu.be') {
+      var id = null;
+      if (host === 'youtu.be') {
+        id = u.pathname.split('/')[1] || null;
+      } else if (u.pathname === '/watch') {
+        id = u.searchParams.get('v');
+      } else {
+        var ym = u.pathname.match(/^\/(embed|shorts|live)\/([A-Za-z0-9_-]{6,})/);
+        if (ym) id = ym[2];
+      }
+      if (id && /^[A-Za-z0-9_-]{6,}$/.test(id)) {
+        return { kind: 'embed', src: 'https://www.youtube.com/embed/' + id + '?autoplay=1' };
+      }
+    }
+    if (host === 'aparat.com') {
+      var am = u.pathname.match(/^\/v\/([A-Za-z0-9]+)/);
+      if (am) {
+        return { kind: 'embed', src: 'https://www.aparat.com/video/video/embed/videohash/' + am[1] + '/vt/frame' };
+      }
+    }
+    return null;
   }
 
   function unescapeWifi(v) {
@@ -678,6 +743,35 @@
     $('#qr-result-card').hidden = false;
     $('#result-type-badge').textContent = parsed.label;
     $('#result-raw').textContent = text;
+
+    // پلیر صوتی/ویدیویی — پخش مستقیم داخل کارت نتیجه
+    var mediaBox = $('#result-media');
+    mediaBox.innerHTML = '';
+    mediaBox.hidden = !parsed.media;
+    if (parsed.media) {
+      var player;
+      if (parsed.media.kind === 'audio') {
+        player = document.createElement('audio');
+        player.controls = true;
+        player.src = parsed.media.src;
+      } else if (parsed.media.kind === 'video') {
+        player = document.createElement('video');
+        player.controls = true;
+        player.playsInline = true;
+        player.src = parsed.media.src;
+      } else {
+        player = document.createElement('iframe');
+        player.src = parsed.media.src;
+        player.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+        player.allowFullscreen = true;
+      }
+      mediaBox.appendChild(player);
+      // تلاش برای پخش خودکار — اگر مرورگر اجازه ندهد، دکمهٔ پخش در دسترس است
+      if (player.play) {
+        var playing = player.play();
+        if (playing && playing.catch) playing.catch(function () {});
+      }
+    }
 
     // ردیف‌های اطلاعات — ساخت با DOM (بدون innerHTML برای دادهٔ کاربر)
     var rowsBox = $('#result-rows');
