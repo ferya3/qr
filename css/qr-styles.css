@@ -1,0 +1,555 @@
+/* ==========================================================================
+   ابزار QR کد — ساخت و اسکن (استاتیک و مستقل)
+   ========================================================================== */
+
+:root {
+  --brand: #1a5f8a;
+  --brand-deep: #0f3f5e;
+  --ink: #1f2a37;
+  --muted: #5b6675;
+  --gold: #b8893b;
+  --gold-soft: #d8b56a;
+  --shadow-sm: 0 2px 10px rgba(15, 40, 70, .06);
+  --shadow-md: 0 12px 32px -10px rgba(15, 40, 70, .16);
+  --shadow-lg: 0 26px 55px -14px rgba(15, 40, 70, .24);
+  --ring: 0 0 0 3px rgba(26, 95, 138, .28);
+  --ease: cubic-bezier(.4, 0, .2, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.qr-page {
+  padding: 48px 20px 70px;
+  min-height: 70vh;
+  background:
+    radial-gradient(1000px 400px at 85% -50px, rgba(26, 95, 138, .08), transparent 60%),
+    radial-gradient(800px 350px at 10% 30px, rgba(184, 137, 59, .07), transparent 60%),
+    #f8f9fa;
+}
+
+.qr-container {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* ---------- سربرگ ---------- */
+.qr-page-header {
+  text-align: center;
+  margin-bottom: 34px;
+}
+
+.qr-page-subtitle {
+  display: inline-block;
+  color: var(--gold, #b8893b);
+  font-weight: 600;
+  font-size: .95rem;
+  letter-spacing: .5px;
+  margin-bottom: 8px;
+}
+
+.qr-page-title {
+  color: var(--ink, #1f2a37);
+  font-size: 2.1rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.qr-page-title .highlight {
+  color: var(--brand, #1a5f8a);
+}
+
+.qr-page-desc {
+  color: var(--muted, #5b6675);
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* ---------- تب‌ها ---------- */
+.qr-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.qr-tab {
+  border: 1.5px solid rgba(26, 95, 138, .25);
+  background: #fff;
+  color: var(--brand, #1a5f8a);
+  padding: 10px 26px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .25s var(--ease, ease);
+}
+
+.qr-tab i { margin-left: 6px; }
+
+.qr-tab:hover { border-color: var(--brand, #1a5f8a); }
+
+.qr-tab.active {
+  background: var(--brand, #1a5f8a);
+  border-color: var(--brand, #1a5f8a);
+  color: #fff;
+  box-shadow: var(--shadow-md, 0 12px 32px -10px rgba(15, 40, 70, .16));
+}
+
+.qr-tabs-small { justify-content: flex-start; margin-bottom: 18px; }
+.qr-tabs-small .qr-tab { padding: 7px 18px; font-size: .9rem; }
+
+/* ---------- پنل‌ها ---------- */
+.qr-panel { display: none; }
+.qr-panel.active { display: block; animation: qrFade .3s var(--ease, ease); }
+
+@keyframes qrFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- گرید ساخت ---------- */
+.qr-gen-grid {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 22px;
+  align-items: start;
+}
+
+.qr-gen-preview { position: sticky; top: 20px; }
+
+/* ---------- کارت ---------- */
+.qr-card {
+  background: #fff;
+  border: 1px solid rgba(15, 40, 70, .08);
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: var(--shadow-sm, 0 2px 10px rgba(15, 40, 70, .06));
+  margin-bottom: 20px;
+}
+
+.qr-card-title {
+  color: var(--ink, #1f2a37);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.qr-card-title i { color: var(--gold, #b8893b); margin-left: 8px; }
+
+/* ---------- چیپ‌های نوع محتوا ---------- */
+.qr-type-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.qr-chip {
+  border: 1.5px solid rgba(15, 40, 70, .15);
+  background: #fff;
+  color: var(--muted, #5b6675);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s var(--ease, ease);
+}
+
+.qr-chip i { margin-left: 5px; }
+
+.qr-chip:hover { border-color: var(--brand, #1a5f8a); color: var(--brand, #1a5f8a); }
+
+.qr-chip.active {
+  background: rgba(26, 95, 138, .1);
+  border-color: var(--brand, #1a5f8a);
+  color: var(--brand, #1a5f8a);
+}
+
+/* ---------- فرم‌ها ---------- */
+.qr-fields { display: none; }
+.qr-fields.active { display: block; animation: qrFade .25s var(--ease, ease); }
+
+.qr-field {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.qr-field > span {
+  display: block;
+  color: var(--ink, #1f2a37);
+  font-size: .88rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.qr-field input[type="text"],
+.qr-field input[type="url"],
+.qr-field input[type="tel"],
+.qr-field input[type="email"],
+.qr-field textarea,
+.qr-field select {
+  width: 100%;
+  border: 1.5px solid rgba(15, 40, 70, .15);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: .95rem;
+  color: var(--ink, #1f2a37);
+  background: #fff;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.qr-field input:focus,
+.qr-field textarea:focus,
+.qr-field select:focus {
+  outline: none;
+  border-color: var(--brand, #1a5f8a);
+  box-shadow: var(--ring, 0 0 0 3px rgba(26, 95, 138, .28));
+}
+
+.qr-field textarea { resize: vertical; }
+
+.qr-field-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.qr-field-row .qr-field { flex: 1 1 160px; }
+
+.qr-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink, #1f2a37);
+  font-size: .9rem;
+  cursor: pointer;
+  margin-bottom: 14px;
+  user-select: none;
+}
+
+.qr-check input { width: 16px; height: 16px; accent-color: var(--brand, #1a5f8a); }
+
+/* رنگ */
+.qr-color input[type="color"] {
+  width: 100%;
+  height: 42px;
+  border: 1.5px solid rgba(15, 40, 70, .15);
+  border-radius: 10px;
+  background: #fff;
+  padding: 4px;
+  cursor: pointer;
+}
+
+/* اسلایدر */
+.qr-range input[type="range"] {
+  width: 100%;
+  accent-color: var(--brand, #1a5f8a);
+  cursor: pointer;
+}
+
+.qr-range b { color: var(--brand, #1a5f8a); }
+
+/* ---------- آکاردئون شخصی‌سازی ---------- */
+.qr-acc {
+  border: 1px solid rgba(15, 40, 70, .1);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.qr-acc summary {
+  cursor: pointer;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: var(--ink, #1f2a37);
+  background: rgba(26, 95, 138, .04);
+  list-style: none;
+  user-select: none;
+}
+
+.qr-acc summary::-webkit-details-marker { display: none; }
+
+.qr-acc summary i { color: var(--gold, #b8893b); margin-left: 8px; width: 18px; text-align: center; }
+
+.qr-acc[open] summary { border-bottom: 1px solid rgba(15, 40, 70, .08); }
+
+.qr-acc-body { padding: 16px; }
+
+/* ---------- لوگو ---------- */
+.qr-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.qr-logo-name {
+  color: var(--muted, #5b6675);
+  font-size: .85rem;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- دکمه‌ها ---------- */
+.qr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-family: inherit;
+  font-size: .92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s var(--ease, ease);
+  border: 1.5px solid transparent;
+}
+
+.qr-btn-primary {
+  background: var(--brand, #1a5f8a);
+  color: #fff;
+}
+
+.qr-btn-primary:hover { background: var(--brand-deep, #0f3f5e); }
+
+.qr-btn-outline {
+  background: #fff;
+  border-color: var(--brand, #1a5f8a);
+  color: var(--brand, #1a5f8a);
+}
+
+.qr-btn-outline:hover { background: rgba(26, 95, 138, .07); }
+
+.qr-btn-ghost {
+  background: transparent;
+  color: var(--muted, #5b6675);
+  border-color: rgba(15, 40, 70, .15);
+}
+
+.qr-btn-ghost:hover { color: var(--brand, #1a5f8a); border-color: var(--brand, #1a5f8a); }
+
+/* ---------- پیش‌نمایش ---------- */
+.qr-preview-card { text-align: center; }
+
+.qr-preview-stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  padding: 10px;
+  background:
+    repeating-conic-gradient(rgba(15, 40, 70, .045) 0% 25%, transparent 0% 50%) 0 0 / 22px 22px;
+  border-radius: 12px;
+  margin-bottom: 18px;
+}
+
+.qr-frame {
+  display: inline-block;
+  background: transparent;
+  transition: all .25s var(--ease, ease);
+}
+
+#qr-canvas-holder canvas,
+#qr-canvas-holder svg {
+  display: block;
+  max-width: 280px;
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+/* حالت‌های قاب در پیش‌نمایش */
+.qr-frame.frame-simple {
+  padding: 14px;
+  border-radius: 18px;
+  background: var(--qr-frame-color, #0f3f5e);
+}
+
+.qr-frame.frame-simple #qr-canvas-holder {
+  background: #fff;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.qr-frame.frame-label {
+  padding: 14px 14px 8px;
+  border-radius: 18px;
+  background: var(--qr-frame-color, #0f3f5e);
+}
+
+.qr-frame.frame-label #qr-canvas-holder {
+  background: #fff;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.qr-frame-label {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 8px 4px 4px;
+  text-align: center;
+}
+
+.qr-download-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.qr-hint {
+  color: var(--muted, #5b6675);
+  font-size: .8rem;
+  margin-top: 12px;
+}
+
+/* ---------- اسکنر ---------- */
+.qr-scan-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  align-items: start;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.qr-scan-mode { display: none; }
+.qr-scan-mode.active { display: block; animation: qrFade .25s var(--ease, ease); }
+
+#qr-reader {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  background: rgba(15, 40, 70, .04);
+  min-height: 60px;
+}
+
+#qr-reader video { border-radius: 12px; }
+
+.qr-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 2px dashed rgba(26, 95, 138, .35);
+  border-radius: 14px;
+  padding: 44px 20px;
+  color: var(--muted, #5b6675);
+  cursor: pointer;
+  text-align: center;
+  transition: all .2s var(--ease, ease);
+}
+
+.qr-dropzone:hover,
+.qr-dropzone.dragover {
+  border-color: var(--brand, #1a5f8a);
+  background: rgba(26, 95, 138, .05);
+  color: var(--brand, #1a5f8a);
+}
+
+.qr-dropzone i { font-size: 2rem; color: var(--brand, #1a5f8a); }
+
+/* ---------- نتیجه اسکن ---------- */
+.qr-badge {
+  display: inline-block;
+  background: rgba(184, 137, 59, .12);
+  color: var(--gold, #b8893b);
+  font-weight: 700;
+  font-size: .85rem;
+  padding: 5px 14px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+}
+
+.qr-result-rows { margin-bottom: 16px; }
+
+.qr-result-row {
+  display: flex;
+  gap: 8px;
+  padding: 9px 0;
+  border-bottom: 1px dashed rgba(15, 40, 70, .1);
+  font-size: .93rem;
+}
+
+.qr-result-row:last-child { border-bottom: none; }
+
+.qr-result-row .k {
+  color: var(--muted, #5b6675);
+  min-width: 90px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.qr-result-row .v {
+  color: var(--ink, #1f2a37);
+  word-break: break-all;
+}
+
+.qr-result-row .v a { color: var(--brand, #1a5f8a); }
+
+.qr-raw pre {
+  direction: ltr;
+  text-align: left;
+  background: rgba(15, 40, 70, .05);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: .8rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ---------- توست ---------- */
+.qr-toast {
+  position: fixed;
+  bottom: 28px;
+  right: 50%;
+  transform: translateX(50%);
+  background: var(--ink, #1f2a37);
+  color: #fff;
+  padding: 11px 22px;
+  border-radius: 999px;
+  font-size: .9rem;
+  box-shadow: var(--shadow-lg, 0 26px 55px -14px rgba(15, 40, 70, .24));
+  z-index: 9999;
+  animation: qrFade .25s var(--ease, ease);
+}
+
+/* ---------- ریسپانسیو ---------- */
+@media (max-width: 960px) {
+  .qr-gen-grid { grid-template-columns: 1fr; }
+  .qr-gen-preview { position: static; order: -1; }
+  .qr-scan-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 520px) {
+  .qr-page { padding-top: 20px; }
+  .qr-page-title { font-size: 1.6rem; }
+  .qr-card { padding: 16px; }
+  .qr-tab { padding: 9px 18px; font-size: .92rem; }
+  #qr-canvas-holder canvas, #qr-canvas-holder svg { max-width: 220px; }
+}

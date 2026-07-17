@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ساخت و اسکن QR کد آنلاین — لینک، متن، ایمیل، تماس، پیامک، وای‌فای و کارت ویزیت با شخصی‌سازی رنگ، اندازه، لوگو و قاب" />
+  <title>ابزار QR کد | ساخت و اسکن آنلاین</title>
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔳</text></svg>" />
+
+  <!-- فونت وزیر -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+
+  <link rel="stylesheet" href="css/qr-styles.css" />
+</head>
+<body>
+
+<section class="qr-page">
+  <div class="qr-container">
+
+    <!-- سربرگ صفحه -->
+    <header class="qr-page-header">
+      <span class="qr-page-subtitle">ابزار آنلاین رایگان</span>
+      <h1 class="qr-page-title">ساخت و اسکن <span class="highlight">QR کد</span></h1>
+      <p class="qr-page-desc">لینک، متن، ایمیل، تماس، پیامک، وای‌فای و کارت ویزیت — با شخصی‌سازی کامل رنگ، اندازه، لوگو و قاب</p>
+    </header>
+
+    <!-- تب‌های اصلی -->
+    <div class="qr-tabs" role="tablist">
+      <button type="button" class="qr-tab active" data-panel="qr-gen-panel"><i class="fas fa-qrcode"></i> ساخت QR کد</button>
+      <button type="button" class="qr-tab" data-panel="qr-scan-panel"><i class="fas fa-camera"></i> اسکن QR کد</button>
+    </div>
+
+    <!-- ================= پنل ساخت ================= -->
+    <div id="qr-gen-panel" class="qr-panel active">
+      <div class="qr-gen-grid">
+
+        <!-- ستون فرم‌ها -->
+        <div class="qr-gen-form">
+
+          <!-- انتخاب نوع محتوا -->
+          <div class="qr-card">
+            <h3 class="qr-card-title"><i class="fas fa-layer-group"></i> نوع محتوا</h3>
+            <div class="qr-type-chips">
+              <button type="button" class="qr-chip active" data-type="link"><i class="fas fa-link"></i> لینک</button>
+              <button type="button" class="qr-chip" data-type="text"><i class="fas fa-align-right"></i> متن</button>
+              <button type="button" class="qr-chip" data-type="email"><i class="fas fa-envelope"></i> ایمیل</button>
+              <button type="button" class="qr-chip" data-type="tel"><i class="fas fa-phone"></i> تماس</button>
+              <button type="button" class="qr-chip" data-type="sms"><i class="fas fa-comment-sms"></i> پیامک</button>
+              <button type="button" class="qr-chip" data-type="wifi"><i class="fas fa-wifi"></i> وای‌فای</button>
+              <button type="button" class="qr-chip" data-type="vcard"><i class="fas fa-address-card"></i> کارت ویزیت</button>
+            </div>
+
+            <!-- فرم لینک -->
+            <div class="qr-fields active" data-fields="link">
+              <label class="qr-field"><span>آدرس لینک</span>
+                <input type="url" id="link-url" dir="ltr" placeholder="https://example.com" />
+              </label>
+            </div>
+
+            <!-- فرم متن -->
+            <div class="qr-fields" data-fields="text">
+              <label class="qr-field"><span>متن دلخواه</span>
+                <textarea id="text-content" rows="4" placeholder="متن خود را اینجا بنویسید…"></textarea>
+              </label>
+            </div>
+
+            <!-- فرم ایمیل -->
+            <div class="qr-fields" data-fields="email">
+              <label class="qr-field"><span>آدرس ایمیل</span>
+                <input type="email" id="email-to" dir="ltr" placeholder="info@example.com" />
+              </label>
+              <label class="qr-field"><span>موضوع (اختیاری)</span>
+                <input type="text" id="email-subject" placeholder="موضوع ایمیل" />
+              </label>
+              <label class="qr-field"><span>متن ایمیل (اختیاری)</span>
+                <textarea id="email-body" rows="3" placeholder="متن پیام…"></textarea>
+              </label>
+            </div>
+
+            <!-- فرم تماس -->
+            <div class="qr-fields" data-fields="tel">
+              <label class="qr-field"><span>شماره تلفن</span>
+                <input type="tel" id="tel-number" dir="ltr" placeholder="+989121234567" />
+              </label>
+            </div>
+
+            <!-- فرم پیامک -->
+            <div class="qr-fields" data-fields="sms">
+              <label class="qr-field"><span>شماره موبایل</span>
+                <input type="tel" id="sms-number" dir="ltr" placeholder="+989121234567" />
+              </label>
+              <label class="qr-field"><span>متن پیامک (اختیاری)</span>
+                <textarea id="sms-message" rows="3" placeholder="متن پیامک…"></textarea>
+              </label>
+            </div>
+
+            <!-- فرم وای‌فای -->
+            <div class="qr-fields" data-fields="wifi">
+              <label class="qr-field"><span>نام شبکه (SSID)</span>
+                <input type="text" id="wifi-ssid" dir="ltr" placeholder="MyWiFi" />
+              </label>
+              <label class="qr-field"><span>رمز عبور</span>
+                <input type="text" id="wifi-pass" dir="ltr" placeholder="••••••••" />
+              </label>
+              <div class="qr-field-row">
+                <label class="qr-field"><span>نوع رمزنگاری</span>
+                  <select id="wifi-enc">
+                    <option value="WPA" selected>WPA / WPA2</option>
+                    <option value="WEP">WEP</option>
+                    <option value="nopass">بدون رمز</option>
+                  </select>
+                </label>
+                <label class="qr-check"><input type="checkbox" id="wifi-hidden" /> شبکهٔ مخفی</label>
+              </div>
+            </div>
+
+            <!-- فرم کارت ویزیت -->
+            <div class="qr-fields" data-fields="vcard">
+              <div class="qr-field-row">
+                <label class="qr-field"><span>نام</span><input type="text" id="vc-first" placeholder="علی" /></label>
+                <label class="qr-field"><span>نام خانوادگی</span><input type="text" id="vc-last" placeholder="احمدی" /></label>
+              </div>
+              <div class="qr-field-row">
+                <label class="qr-field"><span>موبایل</span><input type="tel" id="vc-mobile" dir="ltr" placeholder="+989121234567" /></label>
+                <label class="qr-field"><span>تلفن ثابت (اختیاری)</span><input type="tel" id="vc-phone" dir="ltr" placeholder="+982188888888" /></label>
+              </div>
+              <div class="qr-field-row">
+                <label class="qr-field"><span>ایمیل</span><input type="email" id="vc-email" dir="ltr" placeholder="info@example.com" /></label>
+                <label class="qr-field"><span>وب‌سایت</span><input type="url" id="vc-web" dir="ltr" placeholder="https://example.com" /></label>
+              </div>
+              <div class="qr-field-row">
+                <label class="qr-field"><span>شرکت</span><input type="text" id="vc-org" placeholder="شرکت نمونه" /></label>
+                <label class="qr-field"><span>سِمَت</span><input type="text" id="vc-title" placeholder="مدیر فروش" /></label>
+              </div>
+              <label class="qr-field"><span>آدرس (اختیاری)</span>
+                <input type="text" id="vc-address" placeholder="تهران، خیابان…" />
+              </label>
+            </div>
+          </div>
+
+          <!-- شخصی‌سازی -->
+          <div class="qr-card">
+            <h3 class="qr-card-title"><i class="fas fa-palette"></i> شخصی‌سازی</h3>
+
+            <details class="qr-acc" open>
+              <summary><i class="fas fa-fill-drip"></i> رنگ و ظاهر</summary>
+              <div class="qr-acc-body">
+                <div class="qr-field-row">
+                  <label class="qr-field qr-color"><span>رنگ نقاط</span><input type="color" id="opt-dot-color" value="#0f3f5e" /></label>
+                  <label class="qr-field qr-color"><span>رنگ پس‌زمینه</span><input type="color" id="opt-bg-color" value="#ffffff" /></label>
+                </div>
+                <div class="qr-field-row">
+                  <label class="qr-check"><input type="checkbox" id="opt-gradient" /> گرادیان دو رنگ</label>
+                  <label class="qr-field qr-color gradient-only" hidden><span>رنگ دوم</span><input type="color" id="opt-dot-color2" value="#b8893b" /></label>
+                  <label class="qr-check"><input type="checkbox" id="opt-bg-transparent" /> پس‌زمینه شفاف</label>
+                </div>
+                <div class="qr-field-row">
+                  <label class="qr-field"><span>شکل نقاط</span>
+                    <select id="opt-dot-type">
+                      <option value="square" selected>مربعی (کلاسیک)</option>
+                      <option value="rounded">گرد شده</option>
+                      <option value="dots">نقطه‌ای</option>
+                      <option value="classy">کلاسی</option>
+                      <option value="classy-rounded">کلاسی گرد</option>
+                      <option value="extra-rounded">خیلی گرد</option>
+                    </select>
+                  </label>
+                  <label class="qr-field"><span>شکل گوشه‌ها</span>
+                    <select id="opt-corner-type">
+                      <option value="square" selected>مربعی</option>
+                      <option value="extra-rounded">گرد</option>
+                      <option value="dot">دایره‌ای</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+            </details>
+
+            <details class="qr-acc">
+              <summary><i class="fas fa-up-right-and-down-left-from-center"></i> اندازه و کیفیت</summary>
+              <div class="qr-acc-body">
+                <label class="qr-field qr-range"><span>اندازه: <b id="opt-size-val">400</b> پیکسل</span>
+                  <input type="range" id="opt-size" min="200" max="1200" step="20" value="400" />
+                </label>
+                <label class="qr-field qr-range"><span>حاشیه: <b id="opt-margin-val">10</b></span>
+                  <input type="range" id="opt-margin" min="0" max="50" step="2" value="10" />
+                </label>
+                <label class="qr-field"><span>سطح تصحیح خطا</span>
+                  <select id="opt-ecl">
+                    <option value="L">کم (L) — کد ساده‌تر</option>
+                    <option value="M">متوسط (M)</option>
+                    <option value="Q" selected>خوب (Q)</option>
+                    <option value="H">بالا (H) — مناسب لوگو</option>
+                  </select>
+                </label>
+              </div>
+            </details>
+
+            <details class="qr-acc">
+              <summary><i class="fas fa-image"></i> لوگو</summary>
+              <div class="qr-acc-body">
+                <div class="qr-logo-row">
+                  <label class="qr-btn qr-btn-outline" for="opt-logo">
+                    <i class="fas fa-upload"></i> انتخاب لوگو
+                    <input type="file" id="opt-logo" accept="image/*" hidden />
+                  </label>
+                  <span id="opt-logo-name" class="qr-logo-name">لوگویی انتخاب نشده</span>
+                  <button type="button" id="opt-logo-remove" class="qr-btn qr-btn-ghost" hidden><i class="fas fa-xmark"></i> حذف</button>
+                </div>
+                <label class="qr-field qr-range"><span>اندازه لوگو: <b id="opt-logo-size-val">35</b>٪</span>
+                  <input type="range" id="opt-logo-size" min="15" max="50" step="5" value="35" />
+                </label>
+                <label class="qr-check"><input type="checkbox" id="opt-logo-hide-dots" checked /> پاک‌سازی نقاط پشت لوگو</label>
+              </div>
+            </details>
+
+            <details class="qr-acc">
+              <summary><i class="fas fa-square-full"></i> قاب</summary>
+              <div class="qr-acc-body">
+                <div class="qr-type-chips qr-frame-chips">
+                  <button type="button" class="qr-chip active" data-frame="none">بدون قاب</button>
+                  <button type="button" class="qr-chip" data-frame="simple">قاب ساده</button>
+                  <button type="button" class="qr-chip" data-frame="label">قاب متن‌دار</button>
+                </div>
+                <div class="qr-field-row frame-only" hidden>
+                  <label class="qr-field qr-color"><span>رنگ قاب</span><input type="color" id="opt-frame-color" value="#0f3f5e" /></label>
+                  <label class="qr-field frame-label-only" hidden><span>متن قاب</span>
+                    <input type="text" id="opt-frame-text" value="اسکن کنید" maxlength="30" />
+                  </label>
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- ستون پیش‌نمایش -->
+        <div class="qr-gen-preview">
+          <div class="qr-card qr-preview-card">
+            <h3 class="qr-card-title"><i class="fas fa-eye"></i> پیش‌نمایش</h3>
+            <div class="qr-preview-stage">
+              <div id="qr-frame" class="qr-frame frame-none">
+                <div id="qr-canvas-holder"></div>
+                <div id="qr-frame-label" class="qr-frame-label" hidden>اسکن کنید</div>
+              </div>
+            </div>
+            <div class="qr-download-row">
+              <button type="button" id="btn-dl-png" class="qr-btn qr-btn-primary"><i class="fas fa-download"></i> دانلود PNG</button>
+              <button type="button" id="btn-dl-svg" class="qr-btn qr-btn-outline"><i class="fas fa-file-code"></i> دانلود SVG</button>
+              <button type="button" id="btn-copy-data" class="qr-btn qr-btn-ghost"><i class="fas fa-copy"></i> کپی محتوا</button>
+            </div>
+            <p class="qr-hint">قاب فقط در خروجی PNG اعمال می‌شود؛ خروجی SVG خودِ QR کد است.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= پنل اسکن ================= -->
+    <div id="qr-scan-panel" class="qr-panel">
+      <div class="qr-scan-grid">
+        <div class="qr-card">
+          <h3 class="qr-card-title"><i class="fas fa-expand"></i> اسکن کد</h3>
+
+          <div class="qr-tabs qr-tabs-small">
+            <button type="button" class="qr-tab active" data-scanmode="camera"><i class="fas fa-camera"></i> دوربین</button>
+            <button type="button" class="qr-tab" data-scanmode="file"><i class="fas fa-image"></i> آپلود تصویر</button>
+          </div>
+
+          <!-- اسکن با دوربین -->
+          <div class="qr-scan-mode active" data-mode="camera">
+            <div id="qr-reader"></div>
+            <div class="qr-download-row">
+              <button type="button" id="btn-cam-start" class="qr-btn qr-btn-primary"><i class="fas fa-play"></i> شروع اسکن</button>
+              <button type="button" id="btn-cam-stop" class="qr-btn qr-btn-ghost" hidden><i class="fas fa-stop"></i> توقف</button>
+            </div>
+            <p class="qr-hint" id="cam-hint">برای استفاده از دوربین، دسترسی دوربین را تأیید کنید (نیازمند HTTPS).</p>
+          </div>
+
+          <!-- اسکن از روی تصویر -->
+          <div class="qr-scan-mode" data-mode="file">
+            <label class="qr-dropzone" for="scan-file-input">
+              <i class="fas fa-cloud-arrow-up"></i>
+              <span>تصویر QR کد را اینجا رها کنید یا کلیک کنید</span>
+              <input type="file" id="scan-file-input" accept="image/*" hidden />
+            </label>
+            <div id="qr-file-region" hidden></div>
+          </div>
+        </div>
+
+        <!-- نتیجهٔ اسکن -->
+        <div class="qr-card" id="qr-result-card" hidden>
+          <h3 class="qr-card-title"><i class="fas fa-circle-check"></i> نتیجه اسکن</h3>
+          <div class="qr-result-type"><span id="result-type-badge" class="qr-badge"></span></div>
+          <div id="result-rows" class="qr-result-rows"></div>
+          <div class="qr-download-row" id="result-actions"></div>
+          <details class="qr-acc qr-raw">
+            <summary>متن خام</summary>
+            <pre id="result-raw" dir="ltr"></pre>
+          </details>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- پیام‌های کوتاه -->
+  <div id="qr-toast" class="qr-toast" hidden></div>
+</section>
+
+<script src="js/vendor/qr-code-styling.min.js" defer></script>
+<script src="js/vendor/html5-qrcode.min.js" defer></script>
+<script src="js/vendor/jsqr.min.js" defer></script>
+<script src="js/qr-tool.js" defer></script>
+</body>
+</html>
