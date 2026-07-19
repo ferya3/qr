@@ -35,6 +35,8 @@
     bindFrame();
     bindDownloads();
     bindScanner();
+    bindMediaUpload('audio');
+    bindMediaUpload('video');
 
     rebuild();
   }
@@ -62,9 +64,9 @@
   // ساخت QR — نوع محتوا
   // ==========================================================================
   function bindTypeChips() {
-    $$('.qr-type-chips:not(.qr-frame-chips) .qr-chip').forEach(function (chip) {
+    $$('.qr-type-chips .qr-chip[data-type]').forEach(function (chip) {
       chip.addEventListener('click', function () {
-        $$('.qr-type-chips:not(.qr-frame-chips) .qr-chip').forEach(function (c) { c.classList.remove('active'); });
+        $$('.qr-type-chips .qr-chip[data-type]').forEach(function (c) { c.classList.remove('active'); });
         chip.classList.add('active');
         state.type = chip.dataset.type;
         $$('.qr-fields').forEach(function (f) {
@@ -413,6 +415,168 @@
   }
 
   // ==========================================================================
+  // آپلود فایل صوتی/ویدیویی از دستگاه — لینک هاست‌شده در QR قرار می‌گیرد
+  // ==========================================================================
+  var UPLOAD_MAX_BYTES = 100 * 1024 * 1024; // ۱۰۰ مگابایت
+
+  // به ترتیب امتحان می‌شوند؛ برای تغییر سرویس فقط این لیست را ویرایش کنید
+  var uploadProviders = [
+    {
+      name: 'pixeldrain.com',
+      note: 'ماندگار',
+      upload: function (file, onProgress) {
+        return xhrUpload('PUT', 'https://pixeldrain.com/api/file/' + encodeURIComponent(file.name), file, onProgress)
+          .then(function (resp) {
+            var j = JSON.parse(resp);
+            if (!j.id) throw new Error('bad response');
+            return 'https://pixeldrain.com/api/file/' + j.id;
+          });
+      }
+    },
+    {
+      name: 'tmpfiles.org',
+      note: 'موقت — حدود ۱ ساعت',
+      upload: function (file, onProgress) {
+        var fd = new FormData();
+        fd.append('file', file);
+        return xhrUpload('POST', 'https://tmpfiles.org/api/v1/upload', fd, onProgress)
+          .then(function (resp) {
+            var j = JSON.parse(resp);
+            var url = j && j.data && j.data.url;
+            if (!url) throw new Error('bad response');
+            // تبدیل لینک صفحه به لینک مستقیم دانلود
+            return url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
+          });
+      }
+    }
+  ];
+
+  function xhrUpload(method, url, body, onProgress) {
+    return new Promise(function (resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open(method, url);
+      xhr.timeout = 300000;
+      if (xhr.upload && onProgress) {
+        xhr.upload.onprogress = function (e) {
+          if (e.lengthComputable) onProgress(e.loaded / e.total);
+        };
+      }
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) resolve(xhr.responseText);
+        else reject(new Error('HTTP ' + xhr.status));
+      };
+      xhr.onerror = function () { reject(new Error('network')); };
+      xhr.ontimeout = function () { reject(new Error('timeout')); };
+      xhr.send(body);
+    });
+  }
+
+  function humanSize(bytes) {
+    if (bytes < 1024) return bytes + ' بایت';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(0) + ' کیلوبایت';
+    return (bytes / 1048576).toFixed(1) + ' مگابایت';
+  }
+
+  function bindMediaUpload(kind) {
+    var input = $('#' + kind + '-file-input');
+    var drop = $('#' + kind + '-drop');
+    var info = $('#' + kind + '-file-info');
+    var preview = $('#' + kind + '-file-preview');
+    var btn = $('#' + kind + '-upload-btn');
+    var progress = $('#' + kind + '-progress');
+    var fill = $('#' + kind + '-progress-fill');
+    var status = $('#' + kind + '-upload-status');
+    var picked = null;
+
+    // سوییچ «لینک اینترنتی / آپلود از دستگاه»
+    $$('.qr-src-chips .qr-chip', $('[data-fields="' + kind + '"]')).forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var wrap = $('[data-fields="' + kind + '"]');
+        $$('.qr-src-chips .qr-chip', wrap).forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        $$('.qr-src-pane', wrap).forEach(function (p) {
+          p.classList.toggle('active', p.id === chip.dataset.src);
+        });
+      });
+    });
+
+    function setStatus(msg, cls) {
+      status.hidden = false;
+      status.textContent = msg;
+      status.className = 'qr-upload-status' + (cls ? ' ' + cls : '');
+    }
+
+    function pick(file) {
+      if (!file) return;
+      // بعضی سیستم‌ها MIME نمی‌دهند — پسوند فایل هم بررسی می‌شود
+      var okType = kind === 'audio' ? /^audio\// : /^video\//;
+      var okExt = kind === 'audio' ? /\.(mp3|wav|ogg|oga|m4a|aac|flac|opus)$/i : /\.(mp4|webm|ogv|m4v|mov)$/i;
+      if (!okType.test(file.type) && !okExt.test(file.name)) {
+        toast(kind === 'audio' ? 'لطفاً یک فایل صوتی انتخاب کنید' : 'لطفاً یک فایل ویدیویی انتخاب کنید');
+        return;
+      }
+      if (file.size > UPLOAD_MAX_BYTES) {
+        toast('حجم فایل بیشتر از ۱۰۰ مگابایت است');
+        return;
+      }
+      picked = file;
+      $('#' + kind + '-file-name').textContent = file.name;
+      $('#' + kind + '-file-size').textContent = '(' + humanSize(file.size) + ')';
+      preview.src = URL.createObjectURL(file);
+      info.hidden = false;
+      status.hidden = true;
+      progress.hidden = true;
+      btn.disabled = false;
+    }
+
+    input.addEventListener('change', function () { pick(this.files && this.files[0]); });
+
+    ['dragover', 'dragleave', 'drop'].forEach(function (ev) {
+      drop.addEventListener(ev, function (e) {
+        e.preventDefault();
+        drop.classList.toggle('dragover', ev === 'dragover');
+        if (ev === 'drop' && e.dataTransfer.files && e.dataTransfer.files[0]) {
+          pick(e.dataTransfer.files[0]);
+        }
+      });
+    });
+
+    btn.addEventListener('click', function () {
+      if (!picked) return;
+      btn.disabled = true;
+      progress.hidden = false;
+      fill.style.width = '0%';
+
+      var tryProvider = function (i) {
+        if (i >= uploadProviders.length) {
+          progress.hidden = true;
+          btn.disabled = false;
+          setStatus('آپلود ناموفق بود — اتصال اینترنت را بررسی کنید یا لینک مستقیم فایل را دستی وارد کنید.', 'is-error');
+          return;
+        }
+        var p = uploadProviders[i];
+        setStatus('در حال آپلود به ' + p.name + '…');
+        p.upload(picked, function (ratio) {
+          fill.style.width = Math.round(ratio * 100) + '%';
+        }).then(function (url) {
+          // هینت نوع مدیا برای اسکنر — فرگمنت برای سرور بی‌اثر است
+          url += '#media=' + kind;
+          $('#' + kind + '-url').value = url;
+          fill.style.width = '100%';
+          btn.disabled = false;
+          setStatus('آپلود شد (' + p.name + ' — ' + p.note + '): ' + url, 'is-ok');
+          scheduleRebuild();
+          toast('فایل آپلود شد و QR ساخته شد');
+        }).catch(function () {
+          fill.style.width = '0%';
+          tryProvider(i + 1);
+        });
+      };
+      tryProvider(0);
+    });
+  }
+
+  // ==========================================================================
   // اسکنر
   // ==========================================================================
   function bindScanner() {
@@ -645,6 +809,12 @@
     try { u = new URL(href); } catch (e) { return null; }
     if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
 
+    // هینت صریح نوع مدیا که ژنراتور هنگام آپلود فایل اضافه می‌کند
+    var hint = (u.hash || '').match(/^#media=(audio|video)$/);
+    if (hint) {
+      return { kind: hint[1], src: href.replace(/#.*$/, '') };
+    }
+
     var path = u.pathname.toLowerCase();
     if (/\.(mp3|wav|ogg|oga|m4a|aac|flac|opus)$/.test(path)) {
       return { kind: 'audio', src: href };
@@ -673,6 +843,10 @@
       if (am) {
         return { kind: 'embed', src: 'https://www.aparat.com/video/video/embed/videohash/' + am[1] + '/vt/frame' };
       }
+    }
+    // فایل‌های pixeldrain پسوند ندارند — پلیر ویدیو صدا را هم پخش می‌کند
+    if (host === 'pixeldrain.com' && /^\/api\/file\/[A-Za-z0-9]+$/.test(u.pathname)) {
+      return { kind: 'video', src: href };
     }
     return null;
   }

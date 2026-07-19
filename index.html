@@ -130,18 +130,68 @@
 
             <!-- فرم صدا -->
             <div class="qr-fields" data-fields="audio">
-              <label class="qr-field"><span>لینک فایل صوتی</span>
-                <input type="url" id="audio-url" dir="ltr" placeholder="https://example.com/sound.mp3" />
-              </label>
-              <p class="qr-hint qr-hint-right">لینک مستقیم فایل صوتی (mp3، wav، ogg و…) — با اسکن کد، صدا همان‌جا پخش می‌شود.</p>
+              <div class="qr-type-chips qr-src-chips">
+                <button type="button" class="qr-chip active" data-src="audio-url-pane"><i class="fas fa-link"></i> لینک اینترنتی</button>
+                <button type="button" class="qr-chip" data-src="audio-file-pane"><i class="fas fa-upload"></i> آپلود از دستگاه</button>
+              </div>
+
+              <div class="qr-src-pane active" id="audio-url-pane">
+                <label class="qr-field"><span>لینک فایل صوتی</span>
+                  <input type="url" id="audio-url" dir="ltr" placeholder="https://example.com/sound.mp3" />
+                </label>
+                <p class="qr-hint qr-hint-right">لینک مستقیم فایل صوتی (mp3، wav، ogg و…) — با اسکن کد، صدا همان‌جا پخش می‌شود.</p>
+              </div>
+
+              <div class="qr-src-pane" id="audio-file-pane">
+                <label class="qr-dropzone qr-dropzone-small" for="audio-file-input" id="audio-drop">
+                  <i class="fas fa-music"></i>
+                  <span>فایل صوتی را انتخاب یا اینجا رها کنید</span>
+                  <input type="file" id="audio-file-input" accept="audio/*" hidden />
+                </label>
+                <div class="qr-upload-info" id="audio-file-info" hidden>
+                  <div class="qr-upload-meta"><i class="fas fa-file-audio"></i> <span id="audio-file-name"></span> <b id="audio-file-size"></b></div>
+                  <audio id="audio-file-preview" controls></audio>
+                  <div class="qr-download-row">
+                    <button type="button" id="audio-upload-btn" class="qr-btn qr-btn-primary"><i class="fas fa-cloud-arrow-up"></i> آپلود و ساخت QR</button>
+                  </div>
+                  <div class="qr-progress" id="audio-progress" hidden><div class="qr-progress-fill" id="audio-progress-fill"></div></div>
+                  <p class="qr-upload-status" id="audio-upload-status" hidden></p>
+                </div>
+                <p class="qr-hint qr-hint-right">فایل روی هاست ابری عمومی آپلود و لینکش در QR قرار می‌گیرد — برای فایل‌های خصوصی از لینک هاست خودتان استفاده کنید.</p>
+              </div>
             </div>
 
             <!-- فرم ویدیو -->
             <div class="qr-fields" data-fields="video">
-              <label class="qr-field"><span>لینک ویدیو</span>
-                <input type="url" id="video-url" dir="ltr" placeholder="https://example.com/video.mp4" />
-              </label>
-              <p class="qr-hint qr-hint-right">لینک مستقیم فایل ویدیویی (mp4، webm و…) یا لینک یوتیوب/آپارات — با اسکن کد، ویدیو همان‌جا پخش می‌شود.</p>
+              <div class="qr-type-chips qr-src-chips">
+                <button type="button" class="qr-chip active" data-src="video-url-pane"><i class="fas fa-link"></i> لینک اینترنتی</button>
+                <button type="button" class="qr-chip" data-src="video-file-pane"><i class="fas fa-upload"></i> آپلود از دستگاه</button>
+              </div>
+
+              <div class="qr-src-pane active" id="video-url-pane">
+                <label class="qr-field"><span>لینک ویدیو</span>
+                  <input type="url" id="video-url" dir="ltr" placeholder="https://example.com/video.mp4" />
+                </label>
+                <p class="qr-hint qr-hint-right">لینک مستقیم فایل ویدیویی (mp4، webm و…) یا لینک یوتیوب/آپارات — با اسکن کد، ویدیو همان‌جا پخش می‌شود.</p>
+              </div>
+
+              <div class="qr-src-pane" id="video-file-pane">
+                <label class="qr-dropzone qr-dropzone-small" for="video-file-input" id="video-drop">
+                  <i class="fas fa-film"></i>
+                  <span>فایل ویدیویی را انتخاب یا اینجا رها کنید</span>
+                  <input type="file" id="video-file-input" accept="video/*" hidden />
+                </label>
+                <div class="qr-upload-info" id="video-file-info" hidden>
+                  <div class="qr-upload-meta"><i class="fas fa-file-video"></i> <span id="video-file-name"></span> <b id="video-file-size"></b></div>
+                  <video id="video-file-preview" controls playsinline></video>
+                  <div class="qr-download-row">
+                    <button type="button" id="video-upload-btn" class="qr-btn qr-btn-primary"><i class="fas fa-cloud-arrow-up"></i> آپلود و ساخت QR</button>
+                  </div>
+                  <div class="qr-progress" id="video-progress" hidden><div class="qr-progress-fill" id="video-progress-fill"></div></div>
+                  <p class="qr-upload-status" id="video-upload-status" hidden></p>
+                </div>
+                <p class="qr-hint qr-hint-right">فایل روی هاست ابری عمومی آپلود و لینکش در QR قرار می‌گیرد — برای فایل‌های خصوصی از لینک هاست خودتان استفاده کنید.</p>
+              </div>
             </div>
 
             <!-- فرم کارت ویزیت -->
