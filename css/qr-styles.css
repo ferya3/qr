@@ -599,6 +599,63 @@ body {
 .qr-upload-status.is-ok { color: #1a7a3d; }
 .qr-upload-status.is-error { color: #b3383d; }
 
+/* ---------- پنل مدیر (هاست آپلود اختصاصی) ---------- */
+.qr-admin-open {
+  background: none;
+  border: none;
+  color: var(--muted, #5b6675);
+  font-family: inherit;
+  font-size: .78rem;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 2px;
+  text-decoration: underline dotted;
+}
+
+.qr-admin-open:hover { color: var(--brand, #1a5f8a); }
+.qr-admin-open i { margin-left: 4px; }
+
+.qr-modal-overlay[hidden] { display: none; }
+
+.qr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 40, 70, .45);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: qrFade .2s var(--ease, ease);
+}
+
+.qr-modal {
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  margin-bottom: 0;
+  box-shadow: var(--shadow-lg, 0 26px 55px -14px rgba(15, 40, 70, .24));
+}
+
+.qr-modal .qr-field small { color: var(--muted, #5b6675); font-weight: 400; }
+
+.qr-admin-actions { justify-content: flex-start; margin-top: 6px; }
+
+#adm-snippet-box { margin-top: 12px; }
+
+#adm-snippet-pre {
+  direction: ltr;
+  text-align: left;
+  background: rgba(15, 40, 70, .06);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: .78rem;
+  overflow-x: auto;
+  white-space: pre;
+  margin-bottom: 10px;
+}
+
 .qr-raw pre {
   direction: ltr;
   text-align: left;

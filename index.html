@@ -157,7 +157,8 @@
                   <div class="qr-progress" id="audio-progress" hidden><div class="qr-progress-fill" id="audio-progress-fill"></div></div>
                   <p class="qr-upload-status" id="audio-upload-status" hidden></p>
                 </div>
-                <p class="qr-hint qr-hint-right">فایل روی هاست ابری عمومی آپلود و لینکش در QR قرار می‌گیرد — برای فایل‌های خصوصی از لینک هاست خودتان استفاده کنید.</p>
+                <p class="qr-hint qr-hint-right">فایل روی هاست ابری آپلود و لینکش در QR قرار می‌گیرد — برای فایل‌های خصوصی از لینک هاست خودتان استفاده کنید.</p>
+                <button type="button" class="qr-admin-open"><i class="fas fa-gear"></i> تنظیمات هاست آپلود (مدیر)</button>
               </div>
             </div>
 
@@ -190,7 +191,8 @@
                   <div class="qr-progress" id="video-progress" hidden><div class="qr-progress-fill" id="video-progress-fill"></div></div>
                   <p class="qr-upload-status" id="video-upload-status" hidden></p>
                 </div>
-                <p class="qr-hint qr-hint-right">فایل روی هاست ابری عمومی آپلود و لینکش در QR قرار می‌گیرد — برای فایل‌های خصوصی از لینک هاست خودتان استفاده کنید.</p>
+                <p class="qr-hint qr-hint-right">فایل روی هاست ابری آپلود و لینکش در QR قرار می‌گیرد — برای فایل‌های خصوصی از لینک هاست خودتان استفاده کنید.</p>
+                <button type="button" class="qr-admin-open"><i class="fas fa-gear"></i> تنظیمات هاست آپلود (مدیر)</button>
               </div>
             </div>
 
@@ -385,8 +387,69 @@
 
   <!-- پیام‌های کوتاه -->
   <div id="qr-toast" class="qr-toast" hidden></div>
+
+  <!-- مودال تنظیمات هاست آپلود (مدیر) -->
+  <div id="admin-overlay" class="qr-modal-overlay" hidden>
+    <div class="qr-modal qr-card" role="dialog" aria-modal="true" aria-labelledby="admin-title">
+      <h3 class="qr-card-title" id="admin-title"><i class="fas fa-gear"></i> هاست آپلود اختصاصی</h3>
+      <p class="qr-hint qr-hint-right">هاست خودتان را برای آپلود فایل‌های صوتی/ویدیویی تنظیم و تست کنید. ذخیره، فقط روی همین مرورگر اثر دارد؛ برای اعمال روی همهٔ بازدیدکنندگان، «کد پیکربندی» را در فایل <code dir="ltr">js/upload-config.js</code> قرار دهید.</p>
+
+      <label class="qr-check"><input type="checkbox" id="adm-enabled" /> هاست اختصاصی فعال باشد</label>
+
+      <div class="qr-field-row">
+        <label class="qr-field"><span>نام سرویس</span>
+          <input type="text" id="adm-name" placeholder="هاست من" />
+        </label>
+        <label class="qr-field"><span>متد</span>
+          <select id="adm-method">
+            <option value="POST" selected>POST — فرم multipart</option>
+            <option value="PUT">PUT — بدنهٔ خام فایل</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="qr-field"><span>آدرس API آپلود <small>(«{filename}» با نام فایل جایگزین می‌شود)</small></span>
+        <input type="url" id="adm-endpoint" dir="ltr" placeholder="https://upload.example.com/api/upload" />
+      </label>
+
+      <div class="qr-field-row">
+        <label class="qr-field"><span>نام فیلد فایل (POST)</span>
+          <input type="text" id="adm-field" dir="ltr" value="file" />
+        </label>
+        <label class="qr-field"><span>محل لینک در پاسخ <small>(«text» یا مسیر JSON مثل data.url)</small></span>
+          <input type="text" id="adm-urlpath" dir="ltr" value="data.url" />
+        </label>
+      </div>
+
+      <div class="qr-field-row">
+        <label class="qr-field"><span>پیشوند لینک نهایی (اختیاری)</span>
+          <input type="text" id="adm-prefix" dir="ltr" placeholder="https://files.example.com/" />
+        </label>
+        <label class="qr-field"><span>هدرها — JSON (اختیاری)</span>
+          <input type="text" id="adm-headers" dir="ltr" placeholder='{"Authorization":"Bearer XXX"}' />
+        </label>
+      </div>
+
+      <label class="qr-check"><input type="checkbox" id="adm-fallback" checked /> اگر هاست من خطا داد، سرویس‌های عمومی امتحان شوند</label>
+
+      <div class="qr-download-row qr-admin-actions">
+        <button type="button" id="adm-save" class="qr-btn qr-btn-primary"><i class="fas fa-floppy-disk"></i> ذخیره</button>
+        <button type="button" id="adm-test" class="qr-btn qr-btn-outline"><i class="fas fa-vial"></i> تست آپلود</button>
+        <button type="button" id="adm-snippet" class="qr-btn qr-btn-outline"><i class="fas fa-code"></i> کد پیکربندی</button>
+        <button type="button" id="adm-clear" class="qr-btn qr-btn-ghost"><i class="fas fa-trash"></i> حذف تنظیمات</button>
+        <button type="button" id="adm-close" class="qr-btn qr-btn-ghost"><i class="fas fa-xmark"></i> بستن</button>
+      </div>
+
+      <p class="qr-upload-status" id="adm-status" hidden></p>
+      <div id="adm-snippet-box" hidden>
+        <pre id="adm-snippet-pre" dir="ltr"></pre>
+        <button type="button" id="adm-snippet-copy" class="qr-btn qr-btn-outline"><i class="fas fa-copy"></i> کپی کد</button>
+      </div>
+    </div>
+  </div>
 </section>
 
+<script src="js/upload-config.js"></script>
 <script src="js/vendor/qr-code-styling.min.js" defer></script>
 <script src="js/vendor/html5-qrcode.min.js" defer></script>
 <script src="js/vendor/jsqr.min.js" defer></script>

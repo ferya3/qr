@@ -37,6 +37,7 @@
     bindScanner();
     bindMediaUpload('audio');
     bindMediaUpload('video');
+    bindAdminPanel();
 
     rebuild();
   }
@@ -418,9 +419,10 @@
   // آپلود فایل صوتی/ویدیویی از دستگاه — لینک هاست‌شده در QR قرار می‌گیرد
   // ==========================================================================
   var UPLOAD_MAX_BYTES = 100 * 1024 * 1024; // ۱۰۰ مگابایت
+  var ADMIN_CFG_KEY = 'qr-upload-custom';
 
-  // به ترتیب امتحان می‌شوند؛ برای تغییر سرویس فقط این لیست را ویرایش کنید
-  var uploadProviders = [
+  // سرویس‌های عمومی — به ترتیب امتحان می‌شوند
+  var defaultUploadProviders = [
     {
       name: 'pixeldrain.com',
       note: 'ماندگار',
@@ -451,11 +453,67 @@
     }
   ];
 
-  function xhrUpload(method, url, body, onProgress) {
+  // تنظیمات هاست اختصاصی مدیر: اولویت با ذخیرهٔ مرورگر، بعد فایل upload-config.js
+  function getCustomUploadConfig() {
+    try {
+      var saved = localStorage.getItem(ADMIN_CFG_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) { /* localStorage در دسترس نیست */ }
+    var fileCfg = window.QR_UPLOAD_CONFIG && window.QR_UPLOAD_CONFIG.custom;
+    return fileCfg || null;
+  }
+
+  function makeCustomProvider(cfg) {
+    return {
+      name: cfg.name || 'هاست اختصاصی',
+      note: 'هاست اختصاصی',
+      upload: function (file, onProgress) {
+        var endpoint = String(cfg.endpoint).replace('{filename}', encodeURIComponent(file.name));
+        var method = (cfg.method || 'POST').toUpperCase();
+        var body;
+        if (method === 'PUT') {
+          body = file;
+        } else {
+          body = new FormData();
+          body.append(cfg.fieldName || 'file', file);
+        }
+        return xhrUpload(method, endpoint, body, onProgress, cfg.headers).then(function (resp) {
+          var link;
+          var p = (cfg.responseUrlPath || 'text').trim();
+          if (p === 'text') {
+            link = resp.trim();
+          } else {
+            var j = JSON.parse(resp);
+            link = p.split('.').reduce(function (o, k) { return o == null ? o : o[k]; }, j);
+          }
+          if (!link || typeof link !== 'string') throw new Error('no url in response');
+          return (cfg.urlPrefix || '') + link;
+        });
+      }
+    };
+  }
+
+  // زنجیرهٔ نهایی سرویس‌ها: اول هاست مدیر (اگر فعال)، بعد سرویس‌های عمومی
+  function getUploadProviders() {
+    var list = [];
+    var cfg = getCustomUploadConfig();
+    if (cfg && cfg.enabled && cfg.endpoint) {
+      list.push(makeCustomProvider(cfg));
+      if (cfg.useDefaultFallbacks === false) return list;
+    }
+    return list.concat(defaultUploadProviders);
+  }
+
+  function xhrUpload(method, url, body, onProgress, headers) {
     return new Promise(function (resolve, reject) {
       var xhr = new XMLHttpRequest();
       xhr.open(method, url);
       xhr.timeout = 300000;
+      if (headers) {
+        Object.keys(headers).forEach(function (k) {
+          try { xhr.setRequestHeader(k, headers[k]); } catch (e) { /* هدر نامعتبر */ }
+        });
+      }
       if (xhr.upload && onProgress) {
         xhr.upload.onprogress = function (e) {
           if (e.lengthComputable) onProgress(e.loaded / e.total);
@@ -547,14 +605,15 @@
       progress.hidden = false;
       fill.style.width = '0%';
 
+      var providers = getUploadProviders();
       var tryProvider = function (i) {
-        if (i >= uploadProviders.length) {
+        if (i >= providers.length) {
           progress.hidden = true;
           btn.disabled = false;
           setStatus('آپلود ناموفق بود — اتصال اینترنت را بررسی کنید یا لینک مستقیم فایل را دستی وارد کنید.', 'is-error');
           return;
         }
-        var p = uploadProviders[i];
+        var p = providers[i];
         setStatus('در حال آپلود به ' + p.name + '…');
         p.upload(picked, function (ratio) {
           fill.style.width = Math.round(ratio * 100) + '%';
@@ -573,6 +632,144 @@
         });
       };
       tryProvider(0);
+    });
+  }
+
+  // ==========================================================================
+  // پنل مدیر — تنظیم هاست آپلود اختصاصی
+  // ==========================================================================
+  function bindAdminPanel() {
+    var overlay = $('#admin-overlay');
+    var status = $('#adm-status');
+
+    function setAdmStatus(msg, cls) {
+      status.hidden = false;
+      status.textContent = msg;
+      status.className = 'qr-upload-status' + (cls ? ' ' + cls : '');
+    }
+
+    function fillForm(cfg) {
+      cfg = cfg || {};
+      $('#adm-enabled').checked = !!cfg.enabled;
+      $('#adm-name').value = cfg.name || '';
+      $('#adm-endpoint').value = cfg.endpoint || '';
+      $('#adm-method').value = (cfg.method || 'POST').toUpperCase() === 'PUT' ? 'PUT' : 'POST';
+      $('#adm-field').value = cfg.fieldName || 'file';
+      $('#adm-urlpath').value = cfg.responseUrlPath || 'data.url';
+      $('#adm-prefix').value = cfg.urlPrefix || '';
+      $('#adm-headers').value = cfg.headers && Object.keys(cfg.headers).length ? JSON.stringify(cfg.headers) : '';
+      $('#adm-fallback').checked = cfg.useDefaultFallbacks !== false;
+    }
+
+    // خواندن فرم؛ درصورت JSON نامعتبر هدرها، خطا پرتاب می‌شود
+    function readForm() {
+      var headers = {};
+      var raw = $('#adm-headers').value.trim();
+      if (raw) headers = JSON.parse(raw);
+      return {
+        enabled: $('#adm-enabled').checked,
+        name: $('#adm-name').value.trim() || 'هاست من',
+        endpoint: $('#adm-endpoint').value.trim(),
+        method: $('#adm-method').value,
+        fieldName: $('#adm-field').value.trim() || 'file',
+        headers: headers,
+        responseUrlPath: $('#adm-urlpath').value.trim() || 'text',
+        urlPrefix: $('#adm-prefix').value.trim(),
+        useDefaultFallbacks: $('#adm-fallback').checked
+      };
+    }
+
+    function readFormSafe() {
+      try {
+        var cfg = readForm();
+        if (cfg.enabled && !cfg.endpoint) {
+          setAdmStatus('آدرس API آپلود را وارد کنید.', 'is-error');
+          return null;
+        }
+        return cfg;
+      } catch (e) {
+        setAdmStatus('هدرها JSON معتبر نیست — نمونه: {"Authorization":"Bearer XXX"}', 'is-error');
+        return null;
+      }
+    }
+
+    // فایل صوتی ریز برای تست آپلود (WAV نیم‌ثانیه‌ای)
+    function makeTestFile() {
+      var rate = 8000, n = 4000;
+      var buf = new ArrayBuffer(44 + n * 2);
+      var v = new DataView(buf);
+      var wstr = function (o, s) { for (var i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+      wstr(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); wstr(8, 'WAVE'); wstr(12, 'fmt ');
+      v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+      v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+      wstr(36, 'data'); v.setUint32(40, n * 2, true);
+      for (var i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.round(Math.sin(i / 5) * 8000), true);
+      return new File([buf], 'qr-upload-test.wav', { type: 'audio/wav' });
+    }
+
+    function open() {
+      fillForm(getCustomUploadConfig());
+      status.hidden = true;
+      $('#adm-snippet-box').hidden = true;
+      overlay.hidden = false;
+    }
+
+    function close() { overlay.hidden = true; }
+
+    $$('.qr-admin-open').forEach(function (b) { b.addEventListener('click', open); });
+    $('#adm-close').addEventListener('click', close);
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+
+    $('#adm-save').addEventListener('click', function () {
+      var cfg = readFormSafe();
+      if (!cfg) return;
+      try {
+        localStorage.setItem(ADMIN_CFG_KEY, JSON.stringify(cfg));
+      } catch (e) {
+        setAdmStatus('ذخیره در مرورگر ممکن نشد.', 'is-error');
+        return;
+      }
+      setAdmStatus(cfg.enabled
+        ? 'ذخیره شد — آپلودهای این مرورگر از «' + cfg.name + '» انجام می‌شود. برای همهٔ بازدیدکنندگان، «کد پیکربندی» را در js/upload-config.js بگذارید.'
+        : 'ذخیره شد — هاست اختصاصی غیرفعال است و سرویس‌های عمومی استفاده می‌شوند.', 'is-ok');
+      toast('تنظیمات ذخیره شد');
+    });
+
+    $('#adm-test').addEventListener('click', function () {
+      var cfg = readFormSafe();
+      if (!cfg) return;
+      if (!cfg.endpoint) {
+        setAdmStatus('آدرس API آپلود را وارد کنید.', 'is-error');
+        return;
+      }
+      setAdmStatus('در حال تست آپلود یک فایل صوتی کوچک…');
+      makeCustomProvider(cfg).upload(makeTestFile(), function () {}).then(function (url) {
+        setAdmStatus('تست موفق ✓ لینک دریافتی: ' + url, 'is-ok');
+      }).catch(function (e) {
+        setAdmStatus('تست ناموفق: ' + (e && e.message ? e.message : 'خطای نامشخص') +
+          ' — آدرس، متد، CORS سرور و هدرها را بررسی کنید.', 'is-error');
+      });
+    });
+
+    $('#adm-snippet').addEventListener('click', function () {
+      var cfg = readFormSafe();
+      if (!cfg) return;
+      var code = 'window.QR_UPLOAD_CONFIG = {\n  custom: ' +
+        JSON.stringify(cfg, null, 2).replace(/\n/g, '\n  ') + '\n};\n';
+      $('#adm-snippet-pre').textContent = code;
+      $('#adm-snippet-box').hidden = false;
+      setAdmStatus('این کد را جایگزین محتوای js/upload-config.js کنید تا برای همهٔ بازدیدکنندگان اعمال شود.');
+    });
+
+    $('#adm-snippet-copy').addEventListener('click', function () {
+      copyText($('#adm-snippet-pre').textContent, 'کد پیکربندی کپی شد');
+    });
+
+    $('#adm-clear').addEventListener('click', function () {
+      try { localStorage.removeItem(ADMIN_CFG_KEY); } catch (e) { /* نادیده */ }
+      fillForm(window.QR_UPLOAD_CONFIG && window.QR_UPLOAD_CONFIG.custom);
+      $('#adm-snippet-box').hidden = true;
+      setAdmStatus('تنظیمات مرورگر حذف شد — تنظیمات فایل پیکربندی (درصورت وجود) اعمال می‌شود.', 'is-ok');
     });
   }
 
