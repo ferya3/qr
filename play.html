@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>پخش | ابزار QR کد</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔳</text></svg>" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+      background: #0d1b26;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      gap: 18px;
+    }
+    .stage { width: 100%; max-width: 860px; }
+    video, iframe {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: 0;
+      border-radius: 14px;
+      background: #000;
+    }
+    audio { display: block; width: 100%; }
+    .audio-card {
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 16px;
+      padding: 28px 22px;
+      text-align: center;
+    }
+    .audio-card .icon { font-size: 3rem; margin-bottom: 14px; }
+    .big-play {
+      display: none;
+      margin: 0 auto;
+      background: #1a5f8a;
+      color: #fff;
+      border: 0;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 14px 42px;
+      cursor: pointer;
+    }
+    .big-play.show { display: block; }
+    .err { color: #ffb4b4; text-align: center; line-height: 2; }
+    .foot { font-size: .8rem; }
+    .foot a { color: #8fc1e3; text-decoration: none; }
+    .src {
+      font-size: .72rem;
+      color: rgba(255, 255, 255, .45);
+      direction: ltr;
+      text-align: center;
+      word-break: break-all;
+      max-width: 860px;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage"></div>
+  <button type="button" class="big-play" id="big-play">▶ پخش</button>
+  <div class="src" id="src"></div>
+  <div class="foot"><a href="./">ساخت QR کد برای خودتان ←</a></div>
+
+  <script>
+    (function () {
+      'use strict';
+      // تغییر هش (بازشدن لینک پخش جدید در همین تب) → رندر دوباره
+      window.addEventListener('hashchange', function () { location.reload(); });
+
+      var stage = document.getElementById('stage');
+      var bigPlay = document.getElementById('big-play');
+
+      function fail(msg) {
+        stage.innerHTML = '<p class="err">' + msg + '</p>';
+      }
+
+      // فرمت آدرس: play.html#t=audio|video&u=<لینک انکدشده>
+      var params = {};
+      location.hash.replace(/^#/, '').split('&').forEach(function (kv) {
+        var i = kv.indexOf('=');
+        if (i > 0) params[kv.slice(0, i)] = decodeURIComponent(kv.slice(i + 1));
+      });
+
+      var url = (params.u || '').trim();
+      if (!url || !/^https?:\/\//i.test(url)) {
+        fail('لینکی برای پخش پیدا نشد.');
+        return;
+      }
+      url = url.replace(/#media=(audio|video)$/, '');
+
+      var kind = params.t === 'audio' || params.t === 'video' ? params.t : null;
+
+      // یوتیوب و آپارات → embed
+      var embed = null;
+      try {
+        var u = new URL(url);
+        var host = u.hostname.replace(/^www\.|^m\./, '');
+        if (host === 'youtube.com' || host === 'youtube-nocookie.com' || host === 'youtu.be') {
+          var id = null;
+          if (host === 'youtu.be') id = u.pathname.split('/')[1] || null;
+          else if (u.pathname === '/watch') id = u.searchParams.get('v');
+          else {
+            var m = u.pathname.match(/^\/(embed|shorts|live)\/([A-Za-z0-9_-]{6,})/);
+            if (m) id = m[2];
+          }
+          if (id) embed = 'https://www.youtube.com/embed/' + id + '?autoplay=1';
+        } else if (host === 'aparat.com') {
+          var am = u.pathname.match(/^\/v\/([A-Za-z0-9]+)/);
+          if (am) embed = 'https://www.aparat.com/video/video/embed/videohash/' + am[1] + '/vt/frame';
+        }
+        if (!kind) {
+          var path = u.pathname.toLowerCase();
+          if (/\.(mp3|wav|ogg|oga|m4a|aac|flac|opus)$/.test(path)) kind = 'audio';
+          else kind = 'video';
+        }
+      } catch (e) {
+        fail('لینک نامعتبر است.');
+        return;
+      }
+
+      document.getElementById('src').textContent = url;
+
+      if (embed) {
+        var f = document.createElement('iframe');
+        f.src = embed;
+        f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+        f.allowFullscreen = true;
+        stage.appendChild(f);
+        return;
+      }
+
+      var el;
+      if (kind === 'audio') {
+        var card = document.createElement('div');
+        card.className = 'audio-card';
+        card.innerHTML = '<div class="icon">🎵</div>';
+        el = document.createElement('audio');
+        el.controls = true;
+        el.src = url;
+        card.appendChild(el);
+        stage.appendChild(card);
+      } else {
+        el = document.createElement('video');
+        el.controls = true;
+        el.playsInline = true;
+        el.src = url;
+        stage.appendChild(el);
+      }
+
+      el.addEventListener('error', function () {
+        fail('فایل قابل پخش نیست یا در دسترس نیست.');
+      });
+
+      // تلاش برای پخش خودکار؛ اگر مرورگر اجازه نداد، دکمهٔ پخش بزرگ
+      var p = el.play();
+      if (p && p.catch) {
+        p.catch(function () {
+          bigPlay.classList.add('show');
+          bigPlay.addEventListener('click', function () {
+            bigPlay.classList.remove('show');
+            el.play().catch(function () {});
+          });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

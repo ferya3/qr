@@ -100,6 +100,13 @@
     return v;
   }
 
+  // لینک صدا/ویدیو را در صفحهٔ پلیر سایت می‌پیچد تا با هر اسکنری
+  // (دوربین گوشی و…) مستقیم پخش شود، نه اینکه فقط لینک فایل باز شود
+  function playerWrap(kind, url) {
+    var base = location.href.split(/[?#]/)[0].replace(/[^/]*$/, '') + 'play.html';
+    return base + '#t=' + kind + '&u=' + encodeURIComponent(url);
+  }
+
   // انکدر بایتی qr-code-styling فقط Latin-1 است؛ متن غیر ASCII (فارسی و …)
   // باید قبل از ساخت QR به بایت‌های UTF-8 تبدیل شود تا اسکنرها درست بخوانند.
   function toQrBytes(str) {
@@ -124,11 +131,13 @@
       }
 
       case 'audio': {
-        return normalizeUrl(val('audio-url')) || 'https://example.com/sound.mp3';
+        var au = normalizeUrl(val('audio-url')) || 'https://example.com/sound.mp3';
+        return $('#audio-wrap').checked ? playerWrap('audio', au) : au;
       }
 
       case 'video': {
-        return normalizeUrl(val('video-url')) || 'https://example.com/video.mp4';
+        var vu = normalizeUrl(val('video-url')) || 'https://example.com/video.mp4';
+        return $('#video-wrap').checked ? playerWrap('video', vu) : vu;
       }
 
       case 'email': {
@@ -1005,6 +1014,18 @@
     var u;
     try { u = new URL(href); } catch (e) { return null; }
     if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+
+    // لینک صفحهٔ پلیر خود سایت (play.html#t=…&u=…) → پخش داخلی همان مدیا
+    if (/\/play\.html$/.test(u.pathname)) {
+      var pm = (u.hash || '').match(/^#t=(audio|video)&u=(.+)$/);
+      if (pm) {
+        var inner = decodeURIComponent(pm[2]).replace(/#media=(audio|video)$/, '');
+        if (/^https?:\/\//i.test(inner)) {
+          // لینک داخلی ممکن است خودش یوتیوب/آپارات باشد → embed
+          return mediaFromUrl(inner) || { kind: pm[1], src: inner };
+        }
+      }
+    }
 
     // هینت صریح نوع مدیا که ژنراتور هنگام آپلود فایل اضافه می‌کند
     var hint = (u.hash || '').match(/^#media=(audio|video)$/);
