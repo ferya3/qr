@@ -1021,8 +1021,10 @@
       if (pm) {
         var inner = decodeURIComponent(pm[2]).replace(/#media=(audio|video)$/, '');
         if (/^https?:\/\//i.test(inner)) {
-          // لینک داخلی ممکن است خودش یوتیوب/آپارات باشد → embed
-          return mediaFromUrl(inner) || { kind: pm[1], src: inner };
+          // اگر لینک داخلی یوتیوب/آپارات بود → embed؛ وگرنه هینت صریح t اولویت دارد
+          var innerMedia = mediaFromUrl(inner);
+          if (innerMedia && innerMedia.kind === 'embed') return innerMedia;
+          return { kind: pm[1], src: inner };
         }
       }
     }

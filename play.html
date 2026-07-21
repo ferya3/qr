@@ -6,63 +6,97 @@
   <meta name="robots" content="noindex" />
   <title>پخش | ابزار QR کد</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔳</text></svg>" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; }
     body {
       font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
-      background: #0d1b26;
-      color: #fff;
+      color: #eef1fb;
+      background: #070b18;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 18px;
-      gap: 18px;
+      padding: 20px;
+      gap: 20px;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
     }
-    .stage { width: 100%; max-width: 860px; }
+    /* پس‌زمینهٔ aurora */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      z-index: -1;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+    }
+    body::before {
+      width: 48vw; height: 48vw; top: -16vw; inset-inline-end: -10vw;
+      background: radial-gradient(circle, rgba(99,102,241,.5), transparent 65%);
+    }
+    body::after {
+      width: 42vw; height: 42vw; bottom: -16vw; inset-inline-start: -10vw;
+      background: radial-gradient(circle, rgba(34,211,238,.38), transparent 65%);
+    }
+    .stage { width: 100%; max-width: 880px; }
     video, iframe {
       display: block;
       width: 100%;
       aspect-ratio: 16 / 9;
       border: 0;
-      border-radius: 14px;
+      border-radius: 20px;
       background: #000;
+      box-shadow: 0 40px 80px -24px rgba(0,0,0,.8);
     }
     audio { display: block; width: 100%; }
     .audio-card {
-      background: rgba(255, 255, 255, .06);
+      background: rgba(255, 255, 255, .05);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
       border: 1px solid rgba(255, 255, 255, .12);
-      border-radius: 16px;
-      padding: 28px 22px;
+      border-radius: 24px;
+      padding: 34px 26px;
       text-align: center;
+      box-shadow: 0 30px 60px -20px rgba(0,0,0,.6);
     }
-    .audio-card .icon { font-size: 3rem; margin-bottom: 14px; }
+    .audio-card .icon { font-size: 3.4rem; margin-bottom: 18px; }
     .big-play {
       display: none;
       margin: 0 auto;
-      background: #1a5f8a;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6 55%, #22d3ee 130%);
       color: #fff;
       border: 0;
       border-radius: 999px;
       font-family: inherit;
       font-size: 1.1rem;
       font-weight: 700;
-      padding: 14px 42px;
+      padding: 15px 46px;
       cursor: pointer;
+      box-shadow: 0 14px 36px -8px rgba(99,102,241,.6);
+      transition: transform .2s cubic-bezier(.32,.72,0,1);
     }
+    .big-play:hover { transform: translateY(-2px) scale(1.02); }
     .big-play.show { display: block; }
-    .err { color: #ffb4b4; text-align: center; line-height: 2; }
-    .foot { font-size: .8rem; }
-    .foot a { color: #8fc1e3; text-decoration: none; }
+    .err { color: #fb7185; text-align: center; line-height: 2; font-weight: 600; }
+    .foot { font-size: .82rem; color: rgba(255,255,255,.55); }
+    .foot a {
+      color: #a5b4fc; text-decoration: none; font-weight: 600;
+    }
+    .foot a:hover { text-decoration: underline; }
     .src {
       font-size: .72rem;
-      color: rgba(255, 255, 255, .45);
+      color: rgba(255, 255, 255, .4);
       direction: ltr;
       text-align: center;
       word-break: break-all;
-      max-width: 860px;
+      max-width: 880px;
     }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
   </style>
 </head>
 <body>
