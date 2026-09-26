@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Telegram Translator",
+  "version": "1.0.0",
+  "description": "ترجمهٔ خودکار پیام‌های Telegram Web (مثلاً روسی به فارسی) و ترجمهٔ پیامی که می‌نویسید",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://translate.googleapis.com/*",
+    "https://edge.microsoft.com/*",
+    "https://api-edge.cognitive.microsofttranslator.com/*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "Telegram Translator",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://web.telegram.org/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

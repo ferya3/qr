@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<style>
+  body { width: 300px; margin: 0; padding: 16px; font: 13px/1.7 Tahoma, system-ui, sans-serif; background: #17212b; color: #e5e7eb; }
+  h1 { font-size: 15px; margin: 0 0 12px; color: #fff; }
+  label { display: block; margin-bottom: 10px; }
+  select { width: 100%; margin-top: 4px; padding: 6px; border-radius: 8px; border: 1px solid #334155; background: #0e1621; color: #fff; font: inherit; }
+  .switch { display: flex; align-items: center; justify-content: space-between; background: #0e1621; padding: 8px 10px; border-radius: 8px; }
+  .note { color: #94a3b8; font-size: 12px; margin-top: 8px; }
+  kbd { background: #334155; border-radius: 4px; padding: 0 5px; direction: ltr; display: inline-block; }
+</style>
+</head>
+<body>
+  <h1>مترجم تلگرام</h1>
+  <label class="switch">ترجمهٔ خودکار پیام‌ها <input type="checkbox" id="enabled"></label>
+  <label>ترجمهٔ پیام‌ها به:
+    <select id="target"></select>
+  </label>
+  <label>ترجمهٔ پیامی که می‌نویسم به:
+    <select id="reply"></select>
+  </label>
+  <label>موتور ترجمه:
+    <select id="engine">
+      <option value="google">Google Translate</option>
+      <option value="microsoft">Microsoft Translator</option>
+    </select>
+  </label>
+  <div class="note">
+    اگر یک موتور کار نکند، خودکار از دیگری استفاده می‌شود.<br>
+    <kbd>Alt+T</kbd> ترجمهٔ متنی که در کادر پیام نوشته‌اید<br>
+    <kbd>Alt+Shift+T</kbd> روشن/خاموش کردن ترجمهٔ خودکار
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
