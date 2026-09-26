@@ -2,3 +2,4 @@ host/ytdl_host.sh
 host/ytdl_host.bat
 host/com.ytdl.downloader.json
 __pycache__/
+host/bin/

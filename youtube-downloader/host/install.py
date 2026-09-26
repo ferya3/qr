@@ -100,29 +100,127 @@ def register(manifest_path):
         print(f"   {name}: {target}")
 
 
+TOOL_URLS = {
+    # (platform, machine) -> {tool: url}
+    "win": {
+        "deno": "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip",
+        "ffmpeg": "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip",
+    },
+    "mac-arm64": {
+        "deno": "https://github.com/denoland/deno/releases/latest/download/deno-aarch64-apple-darwin.zip",
+        "ffmpeg": "https://ffmpeg.martin-riedl.de/redirect/latest/macos/arm64/release/ffmpeg.zip",
+    },
+    "mac-x86_64": {
+        "deno": "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-apple-darwin.zip",
+        "ffmpeg": "https://ffmpeg.martin-riedl.de/redirect/latest/macos/amd64/release/ffmpeg.zip",
+    },
+    "linux": {
+        "deno": "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip",
+        "ffmpeg": "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz",
+    },
+}
+
+
+def platform_key():
+    import platform
+
+    if os.name == "nt":
+        return "win"
+    if sys.platform == "darwin":
+        return "mac-arm64" if platform.machine() == "arm64" else "mac-x86_64"
+    return "linux"
+
+
+def download_file(url, dest):
+    import urllib.request
+
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req) as res, open(dest, "wb") as f:
+        total = int(res.headers.get("Content-Length") or 0)
+        got = 0
+        while True:
+            chunk = res.read(1 << 20)
+            if not chunk:
+                break
+            f.write(chunk)
+            got += len(chunk)
+            if total:
+                print(f"\r      {got * 100 // total}%  ({got >> 20} / {total >> 20} MB)", end="", flush=True)
+    print()
+
+
+def extract_tool(archive, tool, bin_dir):
+    """Pull <tool>(.exe) out of a zip / tar archive into bin_dir, flattening folders."""
+    import tarfile
+    import zipfile
+
+    exe = tool + (".exe" if os.name == "nt" else "")
+    wanted = {exe}
+    if tool == "ffmpeg":
+        wanted.add("ffprobe" + (".exe" if os.name == "nt" else ""))
+    found = False
+    if zipfile.is_zipfile(archive):
+        with zipfile.ZipFile(archive) as z:
+            for name in z.namelist():
+                base = name.rsplit("/", 1)[-1]
+                if base in wanted:
+                    (bin_dir / base).write_bytes(z.read(name))
+                    found = found or base == exe
+    else:
+        with tarfile.open(archive) as t:
+            for m in t.getmembers():
+                base = m.name.rsplit("/", 1)[-1]
+                if m.isfile() and base in wanted:
+                    (bin_dir / base).write_bytes(t.extractfile(m).read())
+                    found = found or base == exe
+    for base in wanted:
+        if (bin_dir / base).exists() and os.name != "nt":
+            (bin_dir / base).chmod(0o755)
+    return found
+
+
+def download_tool(tool):
+    url = TOOL_URLS[platform_key()][tool]
+    bin_dir = HERE / "bin"
+    bin_dir.mkdir(exist_ok=True)
+    archive = bin_dir / ("_download" + (".tar.xz" if url.endswith(".tar.xz") else ".zip"))
+    print(f"   downloading {tool} ...")
+    try:
+        download_file(url, archive)
+        ok = extract_tool(archive, tool, bin_dir)
+    except Exception as e:
+        print(f"      failed: {e}")
+        ok = False
+    finally:
+        if archive.exists():
+            archive.unlink()
+    return ok
+
+
 def check_tools():
-    step("Checking optional tools ...")
+    step("Checking ffmpeg and deno ...")
     sys.path.insert(0, str(HERE))
-    import host  # noqa: E402  (extends PATH the same way the host does)
+    import host  # noqa: E402  (extends PATH the same way the host does, incl. ./bin)
 
     ok = True
-    for tool, why in (
-        ("ffmpeg", "needed for 720p+ / 1080p / 4K and MP3"),
-        ("deno", "needed by yt-dlp to unlock all YouTube formats"),
-    ):
+    for tool in ("deno", "ffmpeg"):
         if shutil.which(tool):
-            print(f"   {tool}: found")
+            print(f"   {tool}: found ({shutil.which(tool)})")
+            continue
+        if download_tool(tool):
+            host.extend_path()  # ./bin may not have existed at import time
+        if shutil.which(tool):
+            print(f"   {tool}: installed ({shutil.which(tool)})")
             continue
         ok = False
-        print(f"   {tool}: NOT FOUND  ({why})")
+        print(f"   {tool}: COULD NOT INSTALL AUTOMATICALLY")
         if os.name == "nt":
             pkg = "Gyan.FFmpeg" if tool == "ffmpeg" else "DenoLand.Deno"
-            print(f"      install with:  winget install {pkg}")
+            print(f"      install it manually:  winget install {pkg}")
         elif sys.platform == "darwin":
-            print(f"      install with:  brew install {tool}")
+            print(f"      install it manually:  brew install {tool}")
         else:
-            print(f"      install with your package manager, e.g.  sudo apt install {tool}"
-                  if tool == "ffmpeg" else "      install with:  curl -fsSL https://deno.land/install.sh | sh")
+            print(f"      install it manually with your package manager")
     return ok
 
 
@@ -137,7 +235,7 @@ def main():
     step("Done!")
     print("   Restart Chrome, then open a YouTube video and press the red Download button.")
     if not all_ok:
-        print("   Install the missing tools above, then restart Chrome.")
+        print("   Some tools are missing (see above); install them, then restart Chrome.")
     print("   Do not move this folder; if you do, run the installer again.")
 
 

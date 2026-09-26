@@ -17,32 +17,30 @@ host/        ← برنامهٔ کمکی که yt-dlp را اجرا می‌کند
 
 1. **Python** را نصب کنید: از [python.org](https://www.python.org/downloads/) دانلود کنید و هنگام نصب تیک
    **Add python.exe to PATH** را بزنید.
-2. **ffmpeg** و **deno** را نصب کنید. PowerShell یا Command Prompt را باز کنید و بزنید:
-   ```
-   winget install Gyan.FFmpeg
-   winget install DenoLand.Deno
-   ```
-3. پوشهٔ `youtube-downloader` را در جای ثابتی بگذارید (مثلاً `C:\Tools\youtube-downloader`).
+2. پوشهٔ `youtube-downloader` را در جای ثابتی بگذارید (مثلاً `C:\Tools\youtube-downloader`).
    بعد از نصب آن را جابه‌جا نکنید.
-4. داخل پوشهٔ `host` روی فایل **`install.bat`** دو بار کلیک کنید.
-5. در کروم به `chrome://extensions` بروید، **Developer mode** را روشن کنید، روی **Load unpacked** بزنید
+3. داخل پوشهٔ `host` روی فایل **`install.bat`** دو بار کلیک کنید.
+   این فایل yt-dlp را نصب می‌کند و **ffmpeg** و **deno** را هم خودکار دانلود می‌کند و داخل پوشهٔ `host\bin` می‌گذارد
+   (حدود ۲۰۰ مگابایت؛ کمی صبر کنید).
+4. در کروم به `chrome://extensions` بروید، **Developer mode** را روشن کنید، روی **Load unpacked** بزنید
    و پوشهٔ **`extension`** را انتخاب کنید.
-6. کروم را کامل ببندید و دوباره باز کنید.
+5. کروم را کامل ببندید و دوباره باز کنید.
 
 ## نصب روی مک
 
 1. اگر [Homebrew](https://brew.sh) ندارید، نصبش کنید. بعد در Terminal بزنید:
    ```
-   brew install python ffmpeg deno
+   brew install python
    ```
+   ffmpeg و deno را نصب‌کننده خودکار دانلود می‌کند. اگر نشد: `brew install ffmpeg deno`
 2. پوشهٔ `youtube-downloader` را در جای ثابتی بگذارید (مثلاً در پوشهٔ Documents).
 3. در Terminal بزنید (مسیر را با مسیر پوشهٔ خودتان عوض کنید):
    ```
    sh ~/Documents/youtube-downloader/host/install.sh
    ```
-4. مثل قدم ۵ و ۶ ویندوز، پوشهٔ `extension` را در کروم Load کنید و کروم را ری‌استارت کنید.
+4. مثل قدم ۴ و ۵ ویندوز، پوشهٔ `extension` را در کروم Load کنید و کروم را ری‌استارت کنید.
 
-> لینوکس هم مثل مک است: `ffmpeg` را با مدیر بستهٔ توزیع نصب کنید و `install.sh` را اجرا کنید.
+> لینوکس هم مثل مک است: `install.sh` را اجرا کنید.
 
 ## بررسی نصب
 

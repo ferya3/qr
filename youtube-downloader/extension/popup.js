@@ -32,7 +32,7 @@ chrome.runtime.sendMessage({ type: 'ping' }, (res) => {
     n.textContent =
       (!res.ffmpeg ? 'بدون ffmpeg فقط کیفیت‌های پایین (حدود 360p) و بدون تبدیل به MP3 ممکن است. ' : '') +
       (!res.deno ? 'بدون deno ممکن است yt-dlp همهٔ کیفیت‌ها را پیدا نکند. ' : '') +
-      'راهنمای نصب در README آمده است.';
+      'فایل install را دوباره اجرا کنید تا خودکار دانلود شوند، سپس کروم را کامل ببندید و باز کنید.';
     box.append(n);
   }
   if (res.folder) {

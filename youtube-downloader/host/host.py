@@ -46,7 +46,8 @@ def extend_path():
     """Chrome starts hosts with the PATH it had when it launched (often minimal);
     add the usual install locations for ffmpeg and deno."""
     home = Path.home()
-    extra = [home / ".deno" / "bin", home / ".local" / "bin"]
+    # ./bin holds the copies of deno / ffmpeg that install.py downloads
+    extra = [Path(__file__).resolve().parent / "bin", home / ".deno" / "bin", home / ".local" / "bin"]
     if os.name == "nt":
         local = Path(os.environ.get("LOCALAPPDATA", home / "AppData" / "Local"))
         winget = local / "Microsoft" / "WinGet"
@@ -64,6 +65,9 @@ def extend_path():
     for p in extra:
         if str(p) not in parts and p.is_dir():
             parts.append(str(p))
+    local_bin = str(extra[0])
+    if Path(local_bin).is_dir():
+        parts = [local_bin] + [x for x in parts if x != local_bin]
     os.environ["PATH"] = os.pathsep.join(parts)
 
 
