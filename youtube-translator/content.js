@@ -48,6 +48,38 @@
     return chunks.filter((c) => c.text && !/^\[.*\]$/.test(c.text)); // drop [Music], [Applause]
   }
 
+  // Accepts YouTube json3 or XML (srv3 / srv1) subtitle bodies; returns json3-style events.
+  function parseBody(body) {
+    const text = String(body).trim();
+    if (text.startsWith('{')) {
+      try {
+        return JSON.parse(text).events || [];
+      } catch {
+        return [];
+      }
+    }
+    const doc = new DOMParser().parseFromString(text, 'text/xml');
+    const events = [];
+    for (const p of doc.querySelectorAll('p[t]')) {
+      const start = Number(p.getAttribute('t')) || 0;
+      const words = [...p.querySelectorAll('s')];
+      const segs = words.length
+        ? words.map((w) => ({ utf8: (w.textContent || '') + ' ', tOffsetMs: Number(w.getAttribute('t')) || 0 }))
+        : [{ utf8: p.textContent || '' }];
+      events.push({ tStartMs: start, dDurationMs: Number(p.getAttribute('d')) || 2000, segs });
+    }
+    for (const t of doc.querySelectorAll('text[start]')) {
+      const tmp = document.createElement('textarea');
+      tmp.innerHTML = t.textContent || ''; // srv1 double-escapes entities
+      events.push({
+        tStartMs: Number(t.getAttribute('start')) * 1000,
+        dDurationMs: (Number(t.getAttribute('dur')) || 2) * 1000,
+        segs: [{ utf8: tmp.value }],
+      });
+    }
+    return events;
+  }
+
   function buildSentences(events) {
     const chunks = buildChunks(events);
     const out = [];
@@ -107,15 +139,23 @@
     for (const batch of order) {
       if (myJob !== jobId) return;
       const texts = batch.map((i) => sentences[i].text);
-      try {
-        const res = await chrome.runtime.sendMessage({ type: 'translateBatch', texts, to: settings.target, engine: settings.engine });
-        if (myJob !== jobId) return;
-        if (!res || !res.ok) throw new Error(res ? res.error : 'no response');
-        batch.forEach((idx, k) => (sentences[idx].tr = res.texts[k] || ''));
-      } catch (e) {
-        console.warn('[YouTube Live Translator]', e);
-        setStatus('خطا در ترجمه: ' + e.message);
-        return;
+      for (let attempt = 1; ; attempt++) {
+        try {
+          const res = await chrome.runtime.sendMessage({ type: 'translateBatch', texts, to: settings.target, engine: settings.engine });
+          if (myJob !== jobId) return;
+          if (!res || !res.ok) throw new Error(res ? res.error : 'no response');
+          batch.forEach((idx, k) => (sentences[idx].tr = res.texts[k] || ''));
+          break;
+        } catch (e) {
+          console.warn('[YouTube Live Translator] translation failed:', e.message);
+          if (attempt >= 3) {
+            setStatus('سرویس ترجمه در دسترس نیست (' + e.message + '). اگر از VPN استفاده می‌کنید، آن را روشن کنید یا سرور را عوض کنید، سپس صفحه را رفرش کنید.');
+            return;
+          }
+          setStatus('خطا در ترجمه؛ تلاش دوباره…');
+          await new Promise((r) => setTimeout(r, 3000 * attempt));
+          if (myJob !== jobId) return;
+        }
       }
       done += batch.length;
       setStatus(done < sentences.length ? `در حال ترجمه… ${Math.round((done / sentences.length) * 100)}%` : '');
@@ -126,8 +166,13 @@
   function loadCaptions(msg) {
     if (msg.videoId && msg.videoId !== currentVideoId()) return;
     if (msg.tlang) return; // YouTube's own auto-translated track; we translate the original ourselves
-    const built = buildSentences(msg.events);
-    if (!built.length) return;
+    const built = buildSentences(parseBody(msg.body));
+    if (!built.length) {
+      console.log('[YouTube Live Translator] subtitle file had no usable lines (via ' + msg.via + ')');
+      return;
+    }
+    clearTimeout(retryTimer);
+    console.log(`[YouTube Live Translator] ${built.length} sentences (${msg.lang}, via ${msg.via})`);
     // Same track downloaded again (e.g. seeking): keep existing translations.
     if (videoId === msg.videoId && captionLang === msg.lang && sentences.length === built.length) return;
     videoId = msg.videoId;
@@ -187,10 +232,15 @@
   function tick() {
     requestAnimationFrame(tick);
     const v = video();
-    const active = settings.enabled && currentVideoId() && currentVideoId() === videoId && v;
-    overlay.style.display = active || (settings.enabled && status) ? 'block' : 'none';
-    if (!active) return;
-    attachOverlay();
+    const onVideo = settings.enabled && !!currentVideoId();
+    const active = onVideo && currentVideoId() === videoId && v;
+    overlay.style.display = onVideo && (active || status) ? 'block' : 'none';
+    if (onVideo) attachOverlay();
+    if (!active) {
+      boxEl.style.visibility = 'hidden';
+      lastShown = -2;
+      return;
+    }
     const idx = findSentence(v.currentTime * 1000);
     if (idx === lastShown) return;
     lastShown = idx;
@@ -246,22 +296,49 @@
   }
 
   // ---------- wiring ----------
+  const LANG_FA = (code) => {
+    try {
+      return new Intl.DisplayNames(['fa'], { type: 'language' }).of(code);
+    } catch {
+      return code;
+    }
+  };
+
   window.addEventListener('message', (e) => {
-    if (e.source !== window || !e.data || e.data.source !== 'ytx-page') return;
-    if (e.data.type === 'captions' && settings.enabled) loadCaptions(e.data);
-    if (e.data.type === 'noCaptions' && settings.enabled) {
-      setStatus('این ویدیو زیرنویس ندارد؛ ترجمه ممکن نیست.');
-      setTimeout(() => status.startsWith('این ویدیو') && setStatus(''), 5000);
+    if (e.source !== window || !e.data || e.data.source !== 'ytx-page' || !settings.enabled) return;
+    const m = e.data;
+    if (m.videoId && m.videoId !== currentVideoId()) return;
+    if (m.type === 'captions') loadCaptions(m);
+    else if (m.type === 'noCaptions') {
+      clearTimeout(retryTimer);
+      setStatus('این ویدیو زیرنویس (حتی خودکار) ندارد؛ ترجمه ممکن نیست.');
+      setTimeout(() => status.startsWith('این ویدیو') && setStatus(''), 8000);
+    } else if (m.type === 'status' && m.message === 'track' && !sentences.length) {
+      setStatus(`زیرنویس ${LANG_FA(m.lang)}${m.auto ? ' (خودکار)' : ''} پیدا شد؛ در حال دریافت…`);
     }
   });
 
+  let retryTimer = null;
+  let attempts = 0;
   function requestCaptions() {
-    if (!settings.enabled || !currentVideoId()) return;
-    window.postMessage({ source: 'ytx-ext', cmd: 'enableCaptions' }, '*');
+    clearTimeout(retryTimer);
+    const id = currentVideoId();
+    if (!settings.enabled || !id || (videoId === id && sentences.length)) return;
+    attempts++;
+    if (!status || status.startsWith('در حال دریافت')) setStatus('در حال دریافت زیرنویس…');
+    window.postMessage({ source: 'ytx-ext', cmd: 'loadCaptions', videoId: id }, '*');
+    retryTimer = setTimeout(() => {
+      if (videoId === currentVideoId() && sentences.length) return;
+      if (attempts < 4) requestCaptions();
+      else setStatus('زیرنویس دریافت نشد. صفحه را رفرش کنید یا دکمهٔ CC (زیرنویس) پلیر را یک بار بزنید.');
+    }, 4000);
   }
 
   function reset() {
     jobId++;
+    attempts = 0;
+    clearTimeout(retryTimer);
+    retryTimer = null;
     videoId = null;
     sentences = [];
     captionLang = '';
@@ -276,7 +353,7 @@
     reset();
     setTimeout(requestCaptions, 1500);
   });
-  document.addEventListener('play', (e) => e.target === video() && !sentences.length && requestCaptions(), true);
+  document.addEventListener('play', (e) => e.target === video() && !sentences.length && !retryTimer && requestCaptions(), true);
   document.addEventListener('pause', () => {
     speechSynthesis.cancel();
     restoreVolume(video());

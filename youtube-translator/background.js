@@ -53,15 +53,15 @@ const ENGINES = { google, microsoft };
 
 async function translateBatch(texts, to, engine) {
   const order = engine === 'microsoft' ? ['microsoft', 'google'] : ['google', 'microsoft'];
-  let lastErr;
+  const errors = [];
   for (const name of order) {
     try {
       return await ENGINES[name](texts, to);
     } catch (e) {
-      lastErr = e;
+      errors.push(`${name}: ${e.message || e}`);
     }
   }
-  throw lastErr;
+  throw new Error(errors.join(' | '));
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
