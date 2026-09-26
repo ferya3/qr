@@ -22,13 +22,42 @@ sys.stdout = sys.stderr
 OUT_LOCK = threading.Lock()
 
 
+def windows_registry_path():
+    """PATH as currently saved in the registry (tools installed after Chrome started)."""
+    try:
+        import winreg
+    except ImportError:
+        return []
+    result = []
+    for root, key in (
+        (winreg.HKEY_CURRENT_USER, r"Environment"),
+        (winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"),
+    ):
+        try:
+            with winreg.OpenKey(root, key) as k:
+                value, _ = winreg.QueryValueEx(k, "Path")
+                result += [os.path.expandvars(x) for x in value.split(";") if x]
+        except OSError:
+            pass
+    return [Path(x) for x in result]
+
+
 def extend_path():
-    """Chrome starts hosts with a minimal PATH; add the usual install locations."""
+    """Chrome starts hosts with the PATH it had when it launched (often minimal);
+    add the usual install locations for ffmpeg and deno."""
     home = Path.home()
     extra = [home / ".deno" / "bin", home / ".local" / "bin"]
     if os.name == "nt":
         local = Path(os.environ.get("LOCALAPPDATA", home / "AppData" / "Local"))
-        extra += [local / "Microsoft" / "WinGet" / "Links", Path("C:/ffmpeg/bin"), home / "scoop" / "shims"]
+        winget = local / "Microsoft" / "WinGet"
+        extra += windows_registry_path()
+        extra += [winget / "Links", Path("C:/ffmpeg/bin"), home / "scoop" / "shims"]
+        # winget "portable" packages live in versioned folders
+        for exe in ("deno.exe", "ffmpeg.exe"):
+            for found in list((winget / "Packages").glob(f"*/{exe}")) + list(
+                (winget / "Packages").glob(f"*/*/bin/{exe}")
+            ):
+                extra.append(found.parent)
     else:
         extra += [Path("/opt/homebrew/bin"), Path("/usr/local/bin"), Path("/usr/bin")]
     parts = os.environ.get("PATH", "").split(os.pathsep)
@@ -187,21 +216,49 @@ def do_download(url, quality):
     }
     opts.update(build_options(quality, has_ffmpeg))
 
-    try:
-        with yt_dlp.YoutubeDL(opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            path = None
-            reqs = info.get("requested_downloads") or []
-            if reqs:
-                path = reqs[-1].get("filepath")
-            if not path:
-                path = ydl.prepare_filename(info)
-        send({"type": "done", "file": path})
-    except Exception as e:  # yt_dlp.utils.DownloadError and anything else
-        msg = clean_error(e)
-        if re.search(r"403|sign in|bot|Requested format|nsig|signature", msg, re.I):
-            msg += " — اگر مشکل ادامه داشت، yt-dlp را به‌روز کنید (فایل install را دوباره اجرا کنید)."
-        send({"type": "error", "message": msg})
+    # If the requested quality isn't offered, fall back to whatever is available.
+    fallbacks = [opts["format"]]
+    if has_ffmpeg and quality != "mp3":
+        fallbacks += ["bv*+ba/b", "b/bv*"]
+    elif quality != "mp3":
+        fallbacks += ["b/best"]
+    else:
+        fallbacks += ["ba/b/best"]
+
+    last_error = None
+    for i, fmt in enumerate(fallbacks):
+        opts["format"] = fmt
+        if i:
+            send({"type": "status", "message": "کیفیت انتخابی موجود نبود؛ دانلود با بهترین کیفیت موجود…"})
+        try:
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                path = None
+                reqs = info.get("requested_downloads") or []
+                if reqs:
+                    path = reqs[-1].get("filepath")
+                if not path:
+                    path = ydl.prepare_filename(info)
+            send({"type": "done", "file": path})
+            return
+        except Exception as e:  # yt_dlp.utils.DownloadError and anything else
+            last_error = clean_error(e)
+            if "Requested format is not available" not in last_error:
+                break
+
+    msg = last_error or "خطای نامشخص"
+    missing = [t for t in ("deno", "ffmpeg") if not shutil.which(t)]
+    if "Requested format is not available" in msg:
+        msg = "yt-dlp هیچ فرمت قابل دانلودی برای این ویدیو پیدا نکرد."
+        if missing:
+            msg += f" برنامه‌های نصب‌نشده: {', '.join(missing)} — آن‌ها را نصب کنید و کروم را کامل ببندید و دوباره باز کنید."
+        else:
+            msg += " yt-dlp را به‌روز کنید (فایل install را دوباره اجرا کنید)."
+    elif re.search(r"403|sign in|bot|nsig|signature|challenge", msg, re.I):
+        msg += " — yt-dlp را به‌روز کنید (فایل install را دوباره اجرا کنید)."
+        if "deno" in missing:
+            msg += " همچنین deno را نصب کنید."
+    send({"type": "error", "message": msg})
 
 
 def open_folder(path):
