@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<style>
+  body { width: 310px; margin: 0; padding: 16px; font: 13px/1.7 Tahoma, system-ui, sans-serif; background: #181818; color: #e5e5e5; }
+  h1 { font-size: 15px; margin: 0 0 10px; color: #fff; }
+  .box { background: #262626; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+  .row { display: flex; justify-content: space-between; gap: 8px; }
+  .row span:last-child { direction: ltr; }
+  .ok { color: #4ade80; } .bad { color: #f87171; } .warn { color: #fbbf24; }
+  ol { margin: 0; padding-inline-start: 18px; }
+  .note { color: #a3a3a3; font-size: 12px; margin-top: 6px; }
+</style>
+</head>
+<body>
+  <h1>YouTube Downloader</h1>
+  <div class="box" id="status">در حال بررسی برنامهٔ کمکی…</div>
+  <ol>
+    <li>ویدیو را در یوتیوب باز کنید.</li>
+    <li>روی دکمهٔ قرمز <b>دانلود</b> (کنار لایک) بزنید.</li>
+    <li>کیفیت را انتخاب کنید. فایل در پوشهٔ <b>Downloads</b> ذخیره می‌شود.</li>
+  </ol>
+  <script src="popup.js"></script>
+</body>
+</html>

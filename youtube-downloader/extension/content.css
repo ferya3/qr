@@ -1,0 +1,81 @@
+.ytdl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  margin-inline-end: 8px;
+  border: 0;
+  border-radius: 18px;
+  background: #ff0033;
+  color: #fff;
+  font: 500 14px/1 Roboto, Tahoma, Arial, sans-serif;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.ytdl-btn:hover { background: #cc0029; }
+.ytdl-btn.floating {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 2147483646;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.ytdl-menu {
+  position: fixed;
+  z-index: 2147483647;
+  display: none;
+  flex-direction: column;
+  min-width: 180px;
+  padding: 6px 0;
+  background: #282828;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  direction: rtl;
+}
+.ytdl-menu.open { display: flex; }
+.ytdl-menu button {
+  border: 0;
+  background: transparent;
+  color: #f1f1f1;
+  text-align: right;
+  padding: 9px 16px;
+  font: 14px/1.2 Roboto, Tahoma, Arial, sans-serif;
+  cursor: pointer;
+}
+.ytdl-menu button:hover { background: #3f3f3f; }
+
+.ytdl-panel {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 2147483647;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font: 13px/1.5 Roboto, Tahoma, Arial, sans-serif;
+  direction: rtl;
+}
+.ytdl-item {
+  background: #1f1f1f;
+  color: #f1f1f1;
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+.ytdl-row { display: flex; align-items: center; gap: 8px; }
+.ytdl-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.ytdl-q { color: #aaa; font-size: 12px; }
+.ytdl-x { border: 0; background: transparent; color: #aaa; font-size: 16px; cursor: pointer; }
+.ytdl-x:hover { color: #fff; }
+.ytdl-bar { height: 6px; margin-top: 6px; background: #3f3f3f; border-radius: 3px; overflow: hidden; }
+.ytdl-bar > i { display: block; height: 100%; width: 0; background: #ff0033; transition: width 0.2s; }
+.ytdl-status { margin-top: 6px; color: #aaa; font-size: 12px; direction: ltr; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ytdl-status.link { cursor: pointer; text-decoration: underline; }
+.ytdl-item.done .ytdl-bar > i { background: #22c55e; }
+.ytdl-item.error .ytdl-bar > i { background: #ef4444; }
+.ytdl-item.error .ytdl-status { color: #fca5a5; white-space: normal; direction: rtl; text-align: right; }

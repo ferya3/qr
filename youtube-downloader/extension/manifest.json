@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Downloader (yt-dlp)",
+  "version": "1.0.0",
+  "description": "دانلود ویدیو و صدا از یوتیوب با کیفیت دلخواه، با استفاده از yt-dlp روی کامپیوتر خودتان",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkcePzMoxZbeWfDum+QJU8Ax6ov0AbcCo4PnncdooYvomqSJFYh+xYfpYpQUol4KAfpxefSMlYTB95z+uxAbDfu35upT+2jI7zhrY96iJizRcaI9Ovfo3wruAaccn3CHYJfmrPHDib2wGqLZM9n7QQV3etdtQ6oVmIAoZJsh5BGKZcQirioBSS5yczQdMivLaT7TDqDyCx+uU5VlljUvwZ4ur4ok+AiZHzdxbO9VegCdLOZZApQ5auEmwBCWxaAzkjSCh1yxxkj33WBIoYXR+ONBo/v5BG7Gi3McImg2JedwOTEFOIDsT2OnMJP5eN/Gx50Wi1WIm1QObuR+PCxzGAQIDAQAB",
+  "permissions": ["nativeMessaging"],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "YouTube Downloader",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
