@@ -1,0 +1,47 @@
+.ytx-overlay {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  transform: translateX(-50%);
+  z-index: 60;
+  width: max-content;
+  max-width: 88%;
+  pointer-events: none;
+  text-align: center;
+  font-family: Vazirmatn, Tahoma, "Segoe UI", system-ui, sans-serif;
+  display: none;
+}
+.ytx-box {
+  display: inline-block;
+  padding: 0.25em 0.6em;
+  border-radius: 0.3em;
+  background: rgba(8, 8, 8, 0.78);
+}
+.ytx-tr {
+  color: #fff;
+  font-size: 1em;
+  line-height: 1.6;
+  font-weight: 600;
+  unicode-bidi: plaintext;
+  text-shadow: 0 1px 2px #000;
+}
+.ytx-orig {
+  color: #ffd54f;
+  font-size: 0.68em;
+  line-height: 1.5;
+  opacity: 0.9;
+  unicode-bidi: plaintext;
+}
+.ytx-status {
+  display: none;
+  margin-top: 0.4em;
+  padding: 0.2em 0.6em;
+  border-radius: 0.3em;
+  background: rgba(51, 144, 236, 0.9);
+  color: #fff;
+  font-size: 0.55em;
+  direction: rtl;
+}
+/* Move above the control bar when it is visible */
+#movie_player:not(.ytp-autohide) .ytx-overlay { bottom: calc(12% + 40px); }
+html.ytx-hide-native .ytp-caption-window-container { display: none !important; }

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<style>
+  body { width: 310px; margin: 0; padding: 16px; font: 13px/1.7 Tahoma, system-ui, sans-serif; background: #181818; color: #e5e5e5; }
+  h1 { font-size: 15px; margin: 0 0 12px; color: #fff; }
+  label { display: block; margin-bottom: 9px; }
+  select, input[type=range] { width: 100%; margin-top: 4px; }
+  select { padding: 6px; border-radius: 8px; border: 1px solid #3f3f3f; background: #0f0f0f; color: #fff; font: inherit; }
+  .switch { display: flex; align-items: center; justify-content: space-between; background: #262626; padding: 7px 10px; border-radius: 8px; }
+  .note { color: #a3a3a3; font-size: 12px; margin-top: 6px; }
+  .warn { color: #fbbf24; font-size: 12px; margin: -4px 0 8px; display: none; }
+  kbd { background: #3f3f3f; border-radius: 4px; padding: 0 5px; direction: ltr; display: inline-block; }
+</style>
+</head>
+<body>
+  <h1>مترجم همزمان یوتیوب</h1>
+  <label class="switch">زیرنویس ترجمه‌شده <input type="checkbox" id="enabled"></label>
+  <label>ترجمه به:
+    <select id="target"></select>
+  </label>
+  <label class="switch">نمایش متن اصلی زیر ترجمه <input type="checkbox" id="showOriginal"></label>
+  <label class="switch">مخفی کردن زیرنویس خود یوتیوب <input type="checkbox" id="hideOriginal"></label>
+  <label class="switch">خواندن صوتی ترجمه (دوبله) <input type="checkbox" id="voice"></label>
+  <div class="warn" id="voiceWarn"></div>
+  <label>سرعت صدا: <span id="voiceRateVal"></span>
+    <input type="range" id="voiceRate" min="0.8" max="2" step="0.1">
+  </label>
+  <label>اندازهٔ متن: <span id="fontSizeVal"></span>
+    <input type="range" id="fontSize" min="60" max="180" step="10">
+  </label>
+  <label>موتور ترجمه:
+    <select id="engine">
+      <option value="google">Google Translate</option>
+      <option value="microsoft">Microsoft Translator</option>
+    </select>
+  </label>
+  <div class="note">
+    فقط برای ویدیوهایی که زیرنویس (دستی یا خودکار) دارند کار می‌کند.<br>
+    <kbd>Alt+Y</kbd> روشن/خاموش کردن سریع
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
